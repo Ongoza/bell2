@@ -1,10 +1,13 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import mainFace
 import sys
 import traceback
 import os
+import io
 import cgi
+import time
+from PIL import Image, ImageDraw
 
 PORT_NUMBER = 8080
 rootPath = os.path.dirname(os.path.abspath(__file__))
@@ -13,11 +16,28 @@ rootPath = os.path.dirname(os.path.abspath(__file__))
 # the browser
 
 
+def showImg(self):
+    filename = rootPath + self.path
+    # print("try open image " + filename)
+    try:
+        with open(filename, 'rb') as fh:
+            data = fh.read()
+        self.send_header('Content-type', 'image/jpeg')
+        self.end_headers()
+        self.wfile.write(data)
+    except:
+        print("error open file")
+        self.send_header('Content-type', 'text/html')
+        self.end_headers()
+        self.wfile.write(bytes("Error open img", "utf8"))
+    return
+
+
 class myHandler(BaseHTTPRequestHandler):
 
     # Handler for the GET requests
     def do_POST(self):
-        print("start post ", self.path)
+        print("start post time=", self.path, str(int(round(time.time() * 1000))))
         form = cgi.FieldStorage(
             fp=self.rfile,
             headers=self.headers,
@@ -39,18 +59,35 @@ class myHandler(BaseHTTPRequestHandler):
                 file_type = text = file_data.type.split('/')
                 file_data = file_data.file.read()
                 file_len = len(file_data)
-                # print("formName=", file_type[0], " fileNa=",
-                #       fileName, " fileSize=", file_len)
+                print("formName=", file_type[0], " fileNa=",  fileName, " fileSize=", file_len)
                 if (file_len < 2000000):
                     if(file_type[0] == 'image'):
-                        with open("./forRecognation/" + fileName + "." + file_type[1], "wb+") as f:
-                            f.write(file_data)
+                        strTime = str(int(round(time.time() * 1000)))
+                        newName = "./facesResult/result_" + strTime + "." + file_type[1]
+                        print("start save image 0 time=", strTime, newName)
+                        pathFile = "./forRecognation/" + fileName
+                        baseWidth = 1000
+                        baseWidthDelta = baseWidth * 1.2
+                        pil_image = Image.open(io.BytesIO(file_data))
+                        if(baseWidthDelta < pil_image.size[0]):
+                            # scale image to 1000px width
+                            wPercent = (baseWidth / float(pil_image.size[0]))
+                            hsize = int((float(pil_image.size[1]) * float(wPercent)))
+                            print("scale to ", baseWidth, hsize)
+                            pil_image = pil_image.resize((baseWidth, hsize), Image.ANTIALIAS)
+                        pil_image.save(pathFile)
+                        # with open(pathFile, "wb+") as f:
+                        #     f.write(file_data)
                         # try:
-                        #     res = mainFace.findFace("start")
-                        # except:
-                        #     print("error get start")
-                        # self.wfile.write(bytes("Hello World !", "utf8"))
-                        answer += "\"Success\",\"Type\":\"info\"}"
+                        print("save ready 1 time=", str(int(round(time.time() * 1000))))
+                        mainFace.loadLocalData()
+                        print("save ready 2 time=", str(int(round(time.time() * 1000))))
+                        res = mainFace.findFace(pathFile, newName)
+                        print("send ready 3 time=", str(int(round(time.time() * 1000))))
+                        if(res == 1):
+                            answer += "\"" + newName + "\",\"Type\":\"info\"}"
+                        else:
+                            answer += "\"Error recognize photo\",\"Type\":\"danger\"}"
                     else:
                         answer += "\"Error file type\",\"Type\":\"danger\"}"
                 else:
@@ -113,32 +150,11 @@ class myHandler(BaseHTTPRequestHandler):
         # print("path=" + self.path)
         self.send_response(200)
         if("/faces" in self.path):
-            # print("Start faces ")
-            filename = rootPath + self.path
-            try:
-                with open(filename, 'rb') as fh:
-                    data = fh.read()
-                    self.send_header('Content-type', 'image/jpeg')
-                    self.end_headers()
-                    self.wfile.write(data)
-            except:
-                print("error open file")
-                self.send_header('Content-type', 'text/html')
-                self.end_headers()
-                self.wfile.write(bytes("Error open img", "utf8"))
+            showImg(self)
         elif("/img" in self.path):
-            filename = rootPath + self.path
-            try:
-                with open(filename, 'rb') as fh:
-                    data = fh.read()
-                    self.send_header('Content-type', 'image/jpeg')
-                    self.end_headers()
-                    self.wfile.write(data)
-            except:
-                print("error open file")
-                self.send_header('Content-type', 'text/html')
-                self.end_headers()
-                self.wfile.write(bytes("Error open img", "utf8"))
+            showImg(self)
+        elif("/facesResult" in self.path):
+            showImg(self)
         elif("/getFaces" == self.path):  # deleteFace
             answer = "{\"geFacesResult\":["
             try:
@@ -172,7 +188,7 @@ try:
     # Create a web server and define the handler to manage the
     # incoming request
     server = HTTPServer(('', PORT_NUMBER), myHandler)
-    print("Started httpserver on port ", PORT_NUMBER)
+    print("Started web server on port ", PORT_NUMBER)
     # Wait forever for incoming htto requests
     server.serve_forever()
 

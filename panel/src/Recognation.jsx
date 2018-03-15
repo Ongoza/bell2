@@ -13,8 +13,14 @@ export default class Recognation extends React.Component {
     this.handleUploadImage = this.handleUploadImage.bind(this)
     this.imgUrl = false
     this.resultTr = false
+    // this.fileUpload = {"files": null, "value" :""}
   }
 
+  onReloadClick(ev){
+    ev.preventDefault()
+    window.location.reload()
+  }
+  
   handleUploadImage(ev){ ev.preventDefault()
     let ifFiles = this.fileUpload.files.length
     if(ifFiles>0){
@@ -37,8 +43,10 @@ export default class Recognation extends React.Component {
               console.log("this.imgUrl",this.imgUrl,this.resultTr)
             }else{
               this.setState({alertType:body.Type})
-              this.fileUpload.files = null
-              this.fileUpload.value =""
+              if(this.fileUpload){
+                this.fileUpload.files = null
+                this.fileUpload.value =""
+              }
             }
             this.setState({ loading: true});
             this.setState({ result: body.uploadRecognation})
@@ -79,8 +87,9 @@ export default class Recognation extends React.Component {
         </Form>)
     }else {
           return( <div style={{textAlign:"center"}}>
-          <h2>Result</h2>
-            <img style={{height:"100%",width:"100%"}} src={"img/"+this.imgUrl}/>
+            <Button bsStyle="primary" onClick={this.onReloadClick}>Try new</Button>
+            <h2>Result</h2>
+            <img style={{height:"100%",width:"100%"}} src={this.imgUrl}/>
           </div>)
          }
     }

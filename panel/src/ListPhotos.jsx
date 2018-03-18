@@ -19,15 +19,26 @@ export default class ListPhotos extends React.Component {
     this.takeTableData()
   }
 
+  handleErrors(response) {
+      if (!response.ok) {throw Error(response.statusText)}
+      return response;
+  }
+
   takeTableData(){
-    fetch('getFaces')
-    .then((response) => {
-      response.json().then((body) => {
-        this.tableResult = body.geFacesResult
-        this.resultTr=true;
-        console.log("this.resultTr",this.resultTr)
-        this.setState({ resultTr: !this.state.resultTr });
+      fetch('getFaces')
+      .then(this.handleErrors)
+      .then((response) => {
+          let jResponse = response.json()
+          console.log("jResponse=",jResponse)
+          jResponse.then((body) => {
+            this.tableResult = body.geFacesResult
+            this.resultTr=true;
+            console.log("this.resultTr",this.resultTr)
+            this.setState({ resultTr: !this.state.resultTr });
+        })
       })
+    .catch((err)=>{
+      console.log("Error connect to Server")
     })
 }
 

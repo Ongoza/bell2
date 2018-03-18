@@ -7,7 +7,9 @@ import { LinkContainer } from 'react-router-bootstrap';
 import Camera from './Camera'
 import Upload from './Upload'
 import ListPhotos from './ListPhotos'
+import ListCameras from './ListCameras'
 import Recognation from './Recognation'
+import Config from './Config'
 import StartInfo from './StartInfo'
 
 var counter = 0
@@ -36,14 +38,18 @@ class App extends Component {
           <Navbar.Collapse>
             <Nav onSelect={this.onMenuSelect}>
               <LinkContainer to="/recognation"><NavItem eventKey={1}  href="#">Recognation</NavItem></LinkContainer>
-              <LinkContainer to="/faceList"><NavItem eventKey={2} href="#">Faces list</NavItem></LinkContainer>
+              <LinkContainer to="/facesList"><NavItem eventKey={2} href="#">Faces</NavItem></LinkContainer>
+              <LinkContainer to="/camerasList"><NavItem eventKey={2} href="#">Cameras</NavItem></LinkContainer>
+  
             </Nav>
             <Nav pullRight> <NavItem eventKey={1} href="#">Login</NavItem></Nav>
           </Navbar.Collapse>
       </Navbar>
       <Route exact={true} path="/" component={StartInfo}/>
       <Route path="/recognation" component={Recognation}/>
-      <Route path="/faceList" component={ListPhotos}/>
+      <Route path="/facesList" component={ListPhotos}/>
+      <Route path="/camerasList" component={ListCameras}/>
+      <Route path="/config" component={Config}/>
       </div>
     );
   }

@@ -3,18 +3,20 @@ import cv2
 import os
 import random
 
-cap = cv2.VideoCapture(0)
-ramp_frames = 30
-location =  os.getcwd()  # get present working directory location here
+# cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture("rtsp://os:Bluher11_@192.168.1.108:554")
+ramp_frames = 20
+location = os.getcwd()  # get present working directory location here
 
 dig = str(random.randint(10000, 1000000))
-abs_file_path = os.path.join(location, "pic_"+dig+".png")
-print ("opened="+str(cap.isOpened()))
+abs_file_path = os.path.join(location, "pic_" + dig + ".png")
+print("opened=" + str(cap.isOpened()))
+
 
 def get_image():
- # read is the easiest way to get a full image out of a VideoCapture object.
- retval, im = cap.read()
- return im
+    # read is the easiest way to get a full image out of a VideoCapture object.
+    retval, im = cap.read()
+    return im
 
 
 if(cap.isOpened()):
@@ -25,21 +27,13 @@ if(cap.isOpened()):
     camera_capture = get_image()
     cv2.imwrite(abs_file_path, camera_capture)
 
-    # while(True):
-    #     # Capture frame-by-frame
-    #     ret, frame = cap.read()
-    #
-    #     # Our operations on the frame come here
-    #     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-
-    #     if cv2.waitKey(30) & 0xFF == ord('q'): # you can increase delay to 2 seconds here
-    #         break
-        # Display the resulting frame
-        # cv2.imshow('frame',gray)
-        # if cv2.waitKey(1) & 0xFF == ord('q'):
-        #     break
-
-    # When everything done, release the capture
+    # Capture frame-by-frame
+    while(True):
+        ret, frame = cap.read()
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        cv2.imshow('frame', gray)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
     cap.release()
     cv2.destroyAllWindows()
 else:

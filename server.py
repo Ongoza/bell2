@@ -7,6 +7,7 @@ import os
 import io
 import cgi
 import time
+import json
 from PIL import Image, ImageDraw
 
 PORT_NUMBER = 8080
@@ -104,7 +105,7 @@ class myHandler(BaseHTTPRequestHandler):
             try:
                 file_data = form['file']
                 fileName = form.getvalue('fileName')
-                file_type = text = file_data.type.split('/')
+                file_type = file_data.type.split('/')
                 file_data = file_data.file.read()
                 file_len = len(file_data)
                 print("formName=", file_type[0], " fileName=",
@@ -122,8 +123,8 @@ class myHandler(BaseHTTPRequestHandler):
                 else:
                     answer += "\"File is bigger then 2MB\",\"Type\":\"danger\"}"
                 del file_data
-            except error:
-                # print("error sace file", error)
+            except:
+                print("error sace file",  traceback.print_exc())
                 answer += "\"Error file type\",\"Type\":\"danger\"}"
             print("file=", answer)
             self.wfile.write(bytes(answer, "utf8"))
@@ -136,10 +137,60 @@ class myHandler(BaseHTTPRequestHandler):
                 answer += "\"ok\",\"name\":\"" + name + "\",\"Type\":\"info\"}"
                 print("answer=", answer)
                 self.wfile.write(bytes(answer, "utf8"))
-            except error:
+            except:
                 answer += "\"File does not exist.\",\"Type\":\"danger\"}"
-                print("error delete image=", error)
+                print("error delete image=",  traceback.print_exc())
                 self.wfile.write(bytes(answer, "utf8"))
+        elif("/getVideo" == self.path):
+            answer = "{\"Result\":"
+            try:
+                camIP = form.getvalue('ip')
+                camActive = form.getvalue('active')
+                if(camActive == "true"):
+                    pass
+                else:
+                    pass
+
+                print("camIP=", camIP)
+                answer += "\"ok\",\"name\":\"" + camIP + "\",\"Type\":\"info\"}"
+                print("answer=", answer)
+                self.wfile.write(bytes(answer, "utf8"))
+            except:
+                answer += "\"Can not connect to camera.\",\"Type\":\"danger\"}"
+                print("error get video=",  traceback.print_exc())
+                self.wfile.write(bytes(answer, "utf8"))
+        elif("/deleteCamConfig" == self.path):
+            answer = "{\"deleteCamConfigResult\":"
+            try:
+                name = form['name'].value
+
+                answer += "\"ok\",\"name\":\"" + name + "\",\"Type\":\"info\"}"
+                print("answer=", answer)
+                self.wfile.write(bytes(answer, "utf8"))
+            except:
+                answer += "\"File does not exist.\",\"Type\":\"danger\"}"
+                print("error delete camConfig=",  traceback.print_exc())
+                self.wfile.write(bytes(answer, "utf8"))
+        elif("/addCamConfig" == self.path):
+            answer = "{\"addCamConfigResult\":"
+            try:
+                with open("./config/camConfig.json", 'rb') as fh:
+                    data = fh.read()
+                config = json.loads(data)
+                txtData = form.getvalue('body')
+                newCam = json.loads(txtData)
+                config['cameras'].append(newCam)
+                with open('./config/camConfig.json', 'w') as f:
+                    json.dump(config, f, ensure_ascii=False)
+                # print("newJson=", newCam)
+                answer += "\"ok\",\"name\":\"" + newCam["Name"] + "\",\"Type\":\"info\"}"
+                print("answer=", answer)
+                self.wfile.write(bytes(answer, "utf8"))
+            except:
+                answer += "\"Can not add to cam config.\",\"Type\":\"danger\"}"
+                print("error addCamConfig=", traceback.print_exc())
+                self.wfile.write(bytes(answer, "utf8"))
+
         else:
             answer = "{urlNotFound:\"Url is not exist.\",\"Type\":\"danger\"}"
             print("404 can not path=", self.path)
@@ -155,6 +206,18 @@ class myHandler(BaseHTTPRequestHandler):
             showImg(self)
         elif("/facesResult" in self.path):
             showImg(self)
+        elif("/getCamConfig" in self.path):
+            try:
+                with open("./config/camConfig.json", 'rb') as fh:
+                    data = fh.read()
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(data)
+            except:
+                print("error open file ",  traceback.print_exc())
+                self.send_header('Content-type', 'text/html')
+                self.end_headers()
+                self.wfile.write(bytes("Error open img", "utf8"))
         elif("/getFaces" == self.path):  # deleteFace
             answer = "{\"geFacesResult\":["
             try:

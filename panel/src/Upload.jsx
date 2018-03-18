@@ -17,6 +17,11 @@ export default class Upload extends React.Component {
   // componentDidMount() {
   //
   // }
+  handleErrors(response) {
+      if (!response.ok) {throw Error(response.statusText)}
+      return response;
+  }
+
   handleUploadImage(ev) {
     ev.preventDefault();
     //const form = ev.target;
@@ -34,7 +39,9 @@ export default class Upload extends React.Component {
         fetch('upload', {
           method: 'POST',
           body: data,
-        }).then((response) => {
+        })
+        .then(this.handleErrors)
+        .then((response) => {
           console.log("server ansver0=",response)
           response.json().then((body) => {
             console.log("server ansver",body)
@@ -45,7 +52,8 @@ export default class Upload extends React.Component {
             this.firstName.value =""
             this.secondName.value=""
           });
-        });
+        })
+        .catch((err)=>{console.log("Error connect to Server") })
       }else{console.log("no names")
       this.setState({alertType:"danger"})
       this.setState({result:"Please type name"})

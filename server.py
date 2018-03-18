@@ -10,6 +10,8 @@ import time
 import json
 from PIL import Image, ImageDraw
 import cv2
+from socketserver import ThreadingMixIn
+import threading
 
 PORT_NUMBER = 8080
 rootPath = os.path.dirname(os.path.abspath(__file__))
@@ -206,7 +208,10 @@ class myHandler(BaseHTTPRequestHandler):
         if("/camera" in self.path):
             try:
                 # vlc rtsp://os@Bluher11_@192.168.1.108:554
-                cap = cv2.VideoCapture("rtsp://os:Bluher11_@192.168.1.108:554")
+                # rtsp://os:Bluher11_@192.168.1.108:554/cam/realmonitor?channel=1&subtype=0
+                # rtsp://os:Bluher11_@192.168.1.108:554/cam/realmonitor?channel=1&subtype=1
+                strUrl = "rtsp://os:Bluher11_@192.168.1.108:554/cam/realmonitor?channel=1&subtype=1"
+                cap = cv2.VideoCapture(strUrl)
                 if (cap.isOpened()):
                     self.send_header('Content-type', 'multipart/x-mixed-replace; boundary=--jpgboundary')
                     self.end_headers()
@@ -281,14 +286,16 @@ class myHandler(BaseHTTPRequestHandler):
         return
 
 
-try:
-    # Create a web server and define the handler to manage the
-    # incoming request
-    server = HTTPServer(('', PORT_NUMBER), myHandler)
-    print("Started web server on port ", PORT_NUMBER)
-    # Wait forever for incoming htto requests
-    server.serve_forever()
+class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
+    """Handle requests in a separate thread."""
 
-except KeyboardInterrupt:
-    print("^C received, shutting down the web server")
-    server.socket.close()
+
+if __name__ == '__main__':
+    try:
+        server = ThreadedHTTPServer(('localhost', PORT_NUMBER), myHandler)
+        print('Starting server, use <Ctrl-C> to stop. Port:', PORT_NUMBER)
+        server.serve_forever()
+
+    except KeyboardInterrupt:
+        print("Stop cmd received, shutting down the web server")
+        server.socket.close()

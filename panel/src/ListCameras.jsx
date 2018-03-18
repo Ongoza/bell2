@@ -57,7 +57,7 @@ export default class ListCameras extends React.Component {
         this.resultTr=false;
         return result
       }else{
-        return(<div>Wait while connect to cameras </div>)
+        return(<tr><td colSpan="4">Wait while connect to cameras </td></tr>)
       }
     }
 
@@ -80,7 +80,7 @@ export default class ListCameras extends React.Component {
     .then(this.handleErrors)
     .then((response) => {
       response.json().then((body) => {
-        console.log("getCamConfig.result",body.name)        
+        console.log("getCamConfig.result",body.name)
       })
     })
   .catch((err)=>{console.log("Error connect to Server") })

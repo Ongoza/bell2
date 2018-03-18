@@ -9,6 +9,7 @@ import cgi
 import time
 import json
 from PIL import Image, ImageDraw
+import cv2
 
 PORT_NUMBER = 8080
 rootPath = os.path.dirname(os.path.abspath(__file__))
@@ -202,6 +203,39 @@ class myHandler(BaseHTTPRequestHandler):
         self.send_response(200)
         if("/faces" in self.path):
             showImg(self)
+        if("/camera" in self.path):
+            try:
+                # vlc rtsp://os@Bluher11_@192.168.1.108:554
+                cap = cv2.VideoCapture("rtsp://os:Bluher11_@192.168.1.108:554")
+                if (cap.isOpened()):
+                    self.send_header('Content-type', 'multipart/x-mixed-replace; boundary=--jpgboundary')
+                    self.end_headers()
+                    print("Connected to camera 0=")
+                    while True:
+                        try:
+                            retval, im = cap.read()
+                            ret, jpg = cv2.imencode('.jpg', im)
+                            jpg_bytes = jpg.tobytes()
+                            self.wfile.write("--jpgboundary\r\n".encode())
+                            self.send_header('Content-type', 'image/jpeg')
+                            self.send_header('Content-length', len(jpg_bytes))
+                            self.end_headers()
+                            self.wfile.write(jpg_bytes)
+                            time.sleep(0.5)
+                        except (IOError, ConnectionError):
+                            break
+                        # time.sleep(self.server.read_delay)
+                else:
+                    print("Error connect to camera")
+                    cap.release()
+                    self.send_header('Content-type', 'text/html')
+                    self.end_headers()
+                    self.wfile.write(bytes("Error connect to camera", "utf8"))
+            except:
+                print("Error open page for camera", traceback.print_exc())
+                self.send_header('Content-type', 'text/html')
+                self.end_headers()
+                self.wfile.write(bytes("Error open page for connect to camera", "utf8"))
         elif("/img" in self.path):
             showImg(self)
         elif("/facesResult" in self.path):

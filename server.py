@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import mainFace
+import camera_con
 import sys
 import traceback
 import os
@@ -12,12 +13,18 @@ from PIL import Image, ImageDraw
 import cv2
 from socketserver import ThreadingMixIn
 import threading
+from multiprocessing import Process, Manager
 
 PORT_NUMBER = 8080
 rootPath = os.path.dirname(os.path.abspath(__file__))
+cameras = []
 
 # This class will handles any incoming request from
 # the browser
+
+
+def camera_detection(name):
+    print("start camera ", name)
 
 
 def showImg(self):
@@ -293,6 +300,11 @@ class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
 if __name__ == '__main__':
     try:
         server = ThreadedHTTPServer(('localhost', PORT_NUMBER), myHandler)
+        print('Starting cameras processes')
+        p = Process(target=camera_detection, args=('bob',))
+        p.start()
+        cameras.append(p)
+        p.join()
         print('Starting server, use <Ctrl-C> to stop. Port:', PORT_NUMBER)
         server.serve_forever()
 

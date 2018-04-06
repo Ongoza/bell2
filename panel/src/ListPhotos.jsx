@@ -1,6 +1,10 @@
 import React from 'react';
-import {Table, Panel, Button, ButtonGroup, Form, Alert, FormControl, FormGroup, Col, ControlLabel} from 'react-bootstrap';
+import {Table, Panel, Tooltip, OverlayTrigger , Button, ButtonGroup, Form, Alert, FormControl, FormGroup, Col, ControlLabel} from 'react-bootstrap';
 import Upload from './Upload'
+import { LinkContainer } from 'react-router-bootstrap'
+
+const tooltipDelete =(<Tooltip id="tooltipDelete">Delete</Tooltip>);
+const tooltipEdit =(<Tooltip id="tooltipEdit">Edit</Tooltip>);
 
 export default class ListPhotos extends React.Component {
   constructor(props) {
@@ -47,6 +51,7 @@ export default class ListPhotos extends React.Component {
     console.log("this.resultTr",this.resultTr)
     if(this.resultTr){
       result = this.tableResult.map((item, i) =>{
+        // console.log(item)
         let src = "faces/"+item
         let tbStyle = {textAlign:"center",verticalAlign: "middle"}
         let strName = item.replace(/\.[^/.]+$/, "")
@@ -56,7 +61,15 @@ export default class ListPhotos extends React.Component {
           <td>{i}</td>
           <td style={tbStyle}>{arrNames}</td>
           <td style={tbStyle}><img width="128" height="128" src={src}/></td>
-          <td style={tbStyle}><a href="#"><span id={item} className="glyphicon glyphicon-remove" onClick={this.onDelete.bind(this)}></span></a></td>
+          <td style={tbStyle}>
+            <OverlayTrigger placement="top" overlay={tooltipDelete}>
+              <a href="#"><span id={item} className="glyphicon glyphicon-remove" onClick={this.onDelete.bind(this)}></span></a>
+             </OverlayTrigger>
+            &nbsp;&nbsp;
+            <OverlayTrigger placement="top" overlay={tooltipEdit}>
+              <LinkContainer to={"/editFace/"+item}><a href="#"><span id={item} className="glyphicon glyphicon-edit" ></span></a></LinkContainer>
+            </OverlayTrigger>
+          </td>
         </tr>)})
     }
     this.resultTr=false;
@@ -101,7 +114,7 @@ onDelete(e){e.preventDefault();
               <th>#</th>
               <th style={{textAlign:"center",verticalAlign: "middle"}}>Name</th>
               <th style={{textAlign:"center",verticalAlign: "middle"}}>Photo</th>
-              <th style={{textAlign:"center",verticalAlign: "middle"}}>Delete</th>
+              <th style={{textAlign:"center",verticalAlign: "middle"}}>Actions</th>
             </tr>
           </thead>
           <tbody>

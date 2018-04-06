@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import mainFace
-import camera_con
+# import camera_con
 import sys
 import traceback
 import os
@@ -41,6 +41,24 @@ def showImg(self):
         self.send_header('Content-type', 'text/html')
         self.end_headers()
         self.wfile.write(bytes("Error open img", "utf8"))
+    return
+
+
+def showLog(self):
+    filename = rootPath + self.path
+    # print("try open image " + filename)
+    try:
+        with open(filename, 'rb') as fh:
+            data = fh.read()
+        # print("data=",data)
+        self.send_header('Content-type', 'text/html')
+        self.end_headers()
+        self.wfile.write(data)
+    except:
+        print("error open file")
+        self.send_header('Content-type', 'text/html')
+        self.end_headers()
+        self.wfile.write(bytes("Error open log", "utf8"))
     return
 
 
@@ -136,6 +154,43 @@ class myHandler(BaseHTTPRequestHandler):
             except:
                 print("error sace file",  traceback.print_exc())
                 answer += "\"Error file type\",\"Type\":\"danger\"}"
+            print("file=", answer)
+            self.wfile.write(bytes(answer, "utf8"))
+        elif("/updateFace" == self.path):
+            print("start updateFace")
+            answer = "{\"resultUpdate\":"
+            try:
+                fileName = form.getvalue('fileName')
+                print(form)
+                ffile = form.getvalue('file')
+                fileExt = form.getvalue('fileExt')
+                fileOld = form.getvalue('fileOld')
+                if (ffile):
+                    file_type = file_data.type.split('/')
+                    file_data = file_data.file.read()
+                    file_len = len(file_data)
+                    print("formName=", file_type[0], " fileName=",
+                          fileName, " fileSize=", file_len)
+                    if (file_len < 2000000):
+                        if(file_type[0] == 'image'):
+                            if(fileName != ""):
+                                with open("./faces/" + fileName + "." + file_type[1], "wb+") as f:
+                                    f.write(file_data)
+                                answer += "\"Success\",\"Type\":\"info\"}"
+                            else:
+                                answer += "\"Error Photo name type\",\"Type\":\"danger\"}"
+                        else:
+                            answer += "\"Error file type\",\"Type\":\"danger\"}"
+                    else:
+                        answer += "\"File is bigger then 2MB\",\"Type\":\"danger\"}"
+                    del file_data
+                else:
+                    print("rename file")
+                    os.replace(rootPath + "/faces/" + fileOld + fileExt, rootPath + "/faces/" + fileName + fileExt)
+                    answer += "\"Renamed\",\"Type\":\"info\"}"
+            except:
+                print("error sace file",  traceback.print_exc())
+                answer += "\"Error update face\",\"Type\":\"danger\"}"
             print("file=", answer)
             self.wfile.write(bytes(answer, "utf8"))
         elif("/deleteFace" == self.path):
@@ -250,6 +305,10 @@ class myHandler(BaseHTTPRequestHandler):
                 self.wfile.write(bytes("Error open page for connect to camera", "utf8"))
         elif("/img" in self.path):
             showImg(self)
+        elif("/log" in self.path):
+            showLog(self)
+        elif("/notify" in self.path):
+            showLog(self)
         elif("/facesResult" in self.path):
             showImg(self)
         elif("/getCamConfig" in self.path):
@@ -300,11 +359,11 @@ class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
 if __name__ == '__main__':
     try:
         server = ThreadedHTTPServer(('localhost', PORT_NUMBER), myHandler)
-        print('Starting cameras processes')
-        p = Process(target=camera_detection, args=('bob',))
-        p.start()
-        cameras.append(p)
-        p.join()
+        # print('Starting cameras processes')
+        # p = Process(target=camera_detection, args=('bob',))
+        # p.start()
+        # cameras.append(p)
+        # p.join()
         print('Starting server, use <Ctrl-C> to stop. Port:', PORT_NUMBER)
         server.serve_forever()
 

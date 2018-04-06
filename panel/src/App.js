@@ -10,7 +10,10 @@ import ListPhotos from './ListPhotos'
 import ListCameras from './ListCameras'
 import Recognation from './Recognation'
 import Config from './Config'
+import Logs from './Logs'
+import Notify from './Notify'
 import StartInfo from './StartInfo'
+import EditFace from './EditFace'
 
 var counter = 0
 var ctx
@@ -39,8 +42,9 @@ class App extends Component {
             <Nav onSelect={this.onMenuSelect}>
               <LinkContainer to="/recognation"><NavItem eventKey={1}  href="#">Recognation</NavItem></LinkContainer>
               <LinkContainer to="/facesList"><NavItem eventKey={2} href="#">Faces</NavItem></LinkContainer>
-              <LinkContainer to="/camerasList"><NavItem eventKey={2} href="#">Cameras</NavItem></LinkContainer>
-  
+              <LinkContainer to="/camerasList"><NavItem eventKey={3} href="#">Cameras</NavItem></LinkContainer>
+              <LinkContainer to="/notify"><NavItem eventKey={4} href="#">Notify</NavItem></LinkContainer>
+              <LinkContainer to="/log"><NavItem eventKey={4} href="#">Log</NavItem></LinkContainer>
             </Nav>
             <Nav pullRight> <NavItem eventKey={1} href="#">Login</NavItem></Nav>
           </Navbar.Collapse>
@@ -50,6 +54,9 @@ class App extends Component {
       <Route path="/facesList" component={ListPhotos}/>
       <Route path="/camerasList" component={ListCameras}/>
       <Route path="/config" component={Config}/>
+      <Route path="/notify" component={Notify}/>
+      <Route path="/log" component={Logs}/>
+      <Route path="/editFace/:id" component={EditFace}/>
       </div>
     );
   }

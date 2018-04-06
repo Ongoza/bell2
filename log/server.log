@@ -1,0 +1,8 @@
+2018-04-05 18:45:43,962 INFO Start camera_con1 script.
+2018-04-05 18:45:43,962 DEBUG debug message /home/os/Projects/bell2/faces/
+2018-04-05 18:45:46,045 DEBUG STREAM b'IHDR' 16 13
+2018-04-05 18:45:46,045 DEBUG STREAM b'IDAT' 41 8192
+2018-04-05 18:45:47,678 INFO Knowned faces loaded successefull. Faces: 7. Errors: 0
+2018-04-05 18:45:47,679 DEBUG start camera
+2018-04-05 18:45:47,770 DEBUG opened=False
+2018-04-05 18:45:47,771 ERROR no cameras

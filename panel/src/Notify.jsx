@@ -36,8 +36,9 @@ export default class Notify extends React.Component {
           jResponse.then((body) => {
             // this.tableResult = body.geFacesResult
             // this.resultTr=true;
+            this.config_body = body
             console.log("this.resultTr",body)
-            this.refs.config_body.innerHTML = body
+
             this.setState({ resultTr: !this.state.resultTr });
         })
       })
@@ -46,7 +47,32 @@ export default class Notify extends React.Component {
     })
 }
 
+  handleUpdateConfig(){
 
+  }
+
+  showForm(){
+    if(this.config_body){
+      let items = Object.keys(this.config_body).map((key)=>{
+        return (
+          <FormGroup>
+          <Col componentClass={ControlLabel} sm={2}> {key} </Col>
+            <Col sm={5}>
+              <FormControl name ="files" key ="files" label="File"  inputRef={ref => { this.fileUpload = ref; }} type="text" value={this.config_body[key]} />
+            </Col>
+          </FormGroup>
+        )
+      })
+      return(
+        <div id = "configId" key ="configId" >
+          <Form horizontal name ="form" key ="form" >
+            {items}
+          </Form>
+          <Button bsStyle="primary" onClick={this.handleUpdateConfig} name ="bt" key ="bt" >Update</Button>
+        </div>
+      )
+    }
+  }
 
   render() {
     return (
@@ -54,6 +80,7 @@ export default class Notify extends React.Component {
         {this.state.resultTr}
         <h3>Notifaction config</h3>
         <div key="config_body" ref="config_body" id="config_body"></div>
+        {this.showForm()}
       </div>
     )}
 }

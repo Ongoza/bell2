@@ -76,7 +76,7 @@ showResult(){
       <div>
       <Panel bsStyle="info">
         <Panel.Heading>
-          <Panel.Title componentClass="h3">Upload photos to server</Panel.Title>
+          <Panel.Title componentClass="h3">Create new person for recognation</Panel.Title>
         </Panel.Heading>
       <Panel.Body>
           <Form horizontal name ="form" key ="form" >

@@ -93,8 +93,8 @@ def start_camera(url):
                     # print("faces:", len(face_locations))
                     for face_encoding, face_location in zip(face_encodings, face_locations):
                         # See if the face is a match for the known face(s)
-                        matches = face_recognition.compare_faces(known_face_encodings, face_encoding)
-                        name = "Unknown"
+                        matches = face_recognition.compare_faces(known_face_encodings, face_encoding, 0.6)
+                        name = "unknown_"
                         delta = 40
                         height, width, channels = frame_sm.shape
                         # If a match was found in known_face_encodings, just use the first one.
@@ -124,13 +124,13 @@ def start_camera(url):
 
                         else:
                             dig = str(random.randint(10000, 1000000))
-                            name = "unknown_" + dig
+                            name = "unknown_" + dig + "_0"
                             print("Start add new face " + name + " " + str(width) + " " + str(height))
                             print("face location:" + str(left) + " " + str(top) + " " + str(right) + " " + str(bottom))
                             abs_file_path_save = os.path.join(location, "faces/" + name + ".png")
                             crop_img = frame_sm[top:bottom, left:right]
                             height_sm, width_sm, channels_sm = crop_img.shape
-                            print("new face location:", left, top, right, bottom)
+                            print("new face location:", len(face_encodings))
                             if(height_sm > 0 and width_sm > 0):
                                 cv2.imwrite(abs_file_path_save, crop_img)
                             else:

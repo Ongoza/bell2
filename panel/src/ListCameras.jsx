@@ -3,6 +3,8 @@ import {Panel, Label, Button, Checkbox, ButtonGroup, Form, Alert, FormControl, F
 import Config from './Config'
 import { LinkContainer } from 'react-router-bootstrap'
 
+const CheckVideo = props => ( <div className={props.className}/>)
+
 export default class ListCameras extends React.Component {
   constructor(props) {
     super(props);
@@ -39,6 +41,7 @@ export default class ListCameras extends React.Component {
     .catch((err)=>{console.log("Error connect to Server") })
   }
 
+  // <Checkbox checked="" name={item["IP"]} key="stream_0_ch" onChange={this.handleCameraShow.bind(this)}></Checkbox>
   showCameras(){
       if(this.resultTr){
         let result =[];
@@ -49,9 +52,12 @@ export default class ListCameras extends React.Component {
                 <td style={tbStyle}>{i}</td>
                 <td style={tbStyle}>{item["Name"]}</td>
                 <td style={tbStyle}>{item["Location"]}</td>
-                <td> <Checkbox name={item["IP"]} onChange={this.setVideoChange.bind(this)}></Checkbox></td>
-                <td style={tbStyle}><a href="#">
-                </a></td>
+                <td style={tbStyle}>
+                  <a href="#"><span id={item["IP"]} name={item["IP"]} className="glyphicon glyphicon-ban-circle" onClick={this.CameraStreaming.bind(this)}></span></a>
+                </td>
+                <td style={tbStyle}>
+                    <img id={"stream_0"} ref={"stream_0"} width="128" height="128" src="#"  />
+              </td>
               </tr>
             )})
         this.resultTr=false;
@@ -61,29 +67,16 @@ export default class ListCameras extends React.Component {
       }
     }
 
-  handleCameraShow(ev){ev.preventDefault();
-
-  }
-
-  setVideoChange(ev){
-    console.log("check",ev.target.checked,ev.target.name)
-    // if(ev.target.checked){
-    //   console.log("start show video")
-    //
-    // }else{
-    //   console.log("stop show video")
-    // }
-    const data = new FormData();
-    data.append('ip',ev.target.name)
-    data.append('active',ev.target.checked)
-    fetch('getVideo', {method: 'POST', body: data})
-    .then(this.handleErrors)
-    .then((response) => {
-      response.json().then((body) => {
-        console.log("getCamConfig.result",body.name)
-      })
-    })
-  .catch((err)=>{console.log("Error connect to Server") })
+  CameraStreaming(ev){ ev.preventDefault();
+    console.log("show camera",ev.target)
+    if(ev.target.className=="glyphicon glyphicon-ban-circle"){
+      ev.target.className="glyphicon glyphicon-ok-circle"
+      console.log("start show camera")
+      this.refs.stream_0.src = "http://localhost:3000/stream"
+    }else{
+      ev.target.className="glyphicon glyphicon-ban-circle"
+      this.refs.stream_0.src = "#"}
+      this.resultTr=true;
   }
 
   render(){
@@ -101,7 +94,7 @@ export default class ListCameras extends React.Component {
               <th>#</th>
               <th style={{textAlign:"center",verticalAlign: "middle"}}>Name</th>
               <th style={{textAlign:"center",verticalAlign: "middle"}}>Location</th>
-              <th style={{textAlign:"center",verticalAlign: "middle"}}>Active video</th>
+              <th style={{textAlign:"center",verticalAlign: "middle"}}>Streaming</th>
               <th style={{textAlign:"center",verticalAlign: "middle"}}>Video</th>
             </tr>
           </thead>

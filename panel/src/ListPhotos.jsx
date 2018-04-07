@@ -35,9 +35,9 @@ export default class ListPhotos extends React.Component {
           let jResponse = response.json()
           console.log("jResponse=",jResponse)
           jResponse.then((body) => {
-            this.tableResult = body.geFacesResult
+            this.tableResult = body.getFacesResult
             this.resultTr=true;
-            console.log("this.resultTr",this.resultTr)
+            console.log("this.resultTr",this.tableResult)
             this.setState({ resultTr: !this.state.resultTr });
         })
       })
@@ -50,24 +50,23 @@ export default class ListPhotos extends React.Component {
     let result =[];
     console.log("this.resultTr",this.resultTr)
     if(this.resultTr){
-      result = this.tableResult.map((item, i) =>{
-        // console.log(item)
-        let src = "faces/"+item
+      result = Object.keys(this.tableResult).map((key, i) =>{
+        let src = "faces/"+this.tableResult[key][0]
         let tbStyle = {textAlign:"center",verticalAlign: "middle"}
-        let strName = item.replace(/\.[^/.]+$/, "")
-        let arrNames = strName.replace('_'," ")
+        // let strName = key.replace(/\.[^/.]+$/, "")
+        let strNames = key.replace('_'," ") + "  ("+this.tableResult[key].length+" photos)"
       return (
-        <tr key={"item_"+i} style={tbStyle}>
+        <tr key={"item_"+key} style={tbStyle}>
           <td>{i}</td>
-          <td style={tbStyle}>{arrNames}</td>
+          <td style={tbStyle}>{strNames}</td>
           <td style={tbStyle}><img width="128" height="128" src={src}/></td>
           <td style={tbStyle}>
             <OverlayTrigger placement="top" overlay={tooltipDelete}>
-              <a href="#"><span id={item} className="glyphicon glyphicon-remove" onClick={this.onDelete.bind(this)}></span></a>
+              <a href="#"><span id={key} className="glyphicon glyphicon-remove" onClick={this.onDelete.bind(this)}></span></a>
              </OverlayTrigger>
             &nbsp;&nbsp;
             <OverlayTrigger placement="top" overlay={tooltipEdit}>
-              <LinkContainer to={"/editFace/"+item}><a href="#"><span id={item} className="glyphicon glyphicon-edit" ></span></a></LinkContainer>
+              <LinkContainer to={"/editFace/"+key}><a href="#"><span id={key} className="glyphicon glyphicon-edit" ></span></a></LinkContainer>
             </OverlayTrigger>
           </td>
         </tr>)})

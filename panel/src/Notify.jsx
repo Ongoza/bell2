@@ -28,7 +28,7 @@ export default class Notify extends React.Component {
   }
 
   takeTableData(){
-      fetch('notify/notify.cfg')
+      fetch('config/notify.json')
       .then(this.handleErrors)
       .then((response) => {
           let jResponse = response.json()

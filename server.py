@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from urllib.parse import urlparse
 import mainFace
 # import camera_con
 import sys
@@ -14,6 +15,8 @@ import cv2
 from socketserver import ThreadingMixIn
 import threading
 from multiprocessing import Process, Manager
+from collections import defaultdict
+from random import randint
 
 PORT_NUMBER = 8080
 rootPath = os.path.dirname(os.path.abspath(__file__))
@@ -46,9 +49,9 @@ def showImg(self):
 
 def showLog(self):
     filename = rootPath + self.path
-    # print("try open image " + filename)
+    print("try open log " + filename)
     try:
-        with open(filename, 'rb') as fh:
+        with open(filename, 'ab+') as fh:
             data = fh.read()
         # print("data=",data)
         self.send_header('Content-type', 'text/html')
@@ -92,7 +95,7 @@ class myHandler(BaseHTTPRequestHandler):
                 if (file_len < 2000000):
                     if(file_type[0] == 'image'):
                         strTime = str(int(round(time.time() * 1000)))
-                        newName = "./facesResult/result_" + strTime + "." + file_type[1]
+                        newName = "./resultFaces/result_" + strTime + "." + file_type[1]
                         print("start save image 0 time=", strTime, newName)
                         pathFile = "./forRecognation/" + fileName
                         baseWidth = 1000
@@ -163,8 +166,9 @@ class myHandler(BaseHTTPRequestHandler):
                 fileName = form.getvalue('fileName')
                 print(form)
                 ffile = form.getvalue('file')
-                fileExt = form.getvalue('fileExt')
                 fileOld = form.getvalue('fileOld')
+                filesList = form.getvalue('filesList')
+                print("filesList", filesList)
                 if (ffile):
                     file_type = file_data.type.split('/')
                     file_data = file_data.file.read()
@@ -184,9 +188,12 @@ class myHandler(BaseHTTPRequestHandler):
                     else:
                         answer += "\"File is bigger then 2MB\",\"Type\":\"danger\"}"
                     del file_data
-                else:
-                    print("rename file")
-                    os.replace(rootPath + "/faces/" + fileOld + fileExt, rootPath + "/faces/" + fileName + fileExt)
+                if(fileName != fileOld):
+                    filesArr = json.loads(filesList)
+                    for item in filesArr:
+                        root, ext = os.path.splitext(item)
+                        num = str(randint(100000, 1000000))
+                        os.replace(rootPath + "/faces/" + root + ext, rootPath + "/faces/" + fileName + '_' + num + ext)
                     answer += "\"Renamed\",\"Type\":\"info\"}"
             except:
                 print("error sace file",  traceback.print_exc())
@@ -239,7 +246,7 @@ class myHandler(BaseHTTPRequestHandler):
         elif("/addCamConfig" == self.path):
             answer = "{\"addCamConfigResult\":"
             try:
-                with open("./config/camConfig.json", 'rb') as fh:
+                with open("./config/camConfig.json", 'rb+') as fh:
                     data = fh.read()
                 config = json.loads(data)
                 txtData = form.getvalue('body')
@@ -263,17 +270,21 @@ class myHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         # print("photos=", )
-        # print("path=" + self.path)
+        parsed_path = urlparse(self.path)
+        path = parsed_path.path
         self.send_response(200)
-        if("/faces" in self.path):
+        if("/faces" in path):
+            print("start face")
             showImg(self)
-        if("/camera" in self.path):
+        if("/stream" in path):
             try:
                 # vlc rtsp://os@Bluher11_@192.168.1.108:554
                 # rtsp://os:Bluher11_@192.168.1.108:554/cam/realmonitor?channel=1&subtype=0
                 # rtsp://os:Bluher11_@192.168.1.108:554/cam/realmonitor?channel=1&subtype=1
-                strUrl = "rtsp://os:Bluher11_@192.168.1.108:554/cam/realmonitor?channel=1&subtype=1"
+                #strUrl = "rtsp://os:Bluher11_@192.168.1.108:554/cam/realmonitor?channel=1&subtype=1"
+                strUrl = 0
                 cap = cv2.VideoCapture(strUrl)
+                print("Camera ", cap.isOpened())
                 if (cap.isOpened()):
                     self.send_header('Content-type', 'multipart/x-mixed-replace; boundary=--jpgboundary')
                     self.end_headers()
@@ -283,35 +294,49 @@ class myHandler(BaseHTTPRequestHandler):
                             retval, im = cap.read()
                             ret, jpg = cv2.imencode('.jpg', im)
                             jpg_bytes = jpg.tobytes()
+                            print("bute ret=", ret)
                             self.wfile.write("--jpgboundary\r\n".encode())
                             self.send_header('Content-type', 'image/jpeg')
                             self.send_header('Content-length', len(jpg_bytes))
                             self.end_headers()
                             self.wfile.write(jpg_bytes)
                             time.sleep(0.5)
-                        except (IOError, ConnectionError):
+                        except:
+                            print("error stream camera")
+                            with open(rootPath + "/img/error.png", 'rb') as fh:
+                                data = fh.read()
+                            self.send_header('Content-type', 'image/jpeg')
+                            self.end_headers()
+                            self.wfile.write(data)
                             break
                         # time.sleep(self.server.read_delay)
                 else:
                     print("Error connect to camera")
                     cap.release()
-                    self.send_header('Content-type', 'text/html')
+                    with open(rootPath + "/img/error.png", 'rb') as fh:
+                        data = fh.read()
+                    self.send_header('Content-type', 'image/jpeg')
                     self.end_headers()
-                    self.wfile.write(bytes("Error connect to camera", "utf8"))
+                    self.wfile.write(data)
+                if (cap):
+                    cap.release()
             except:
+                if (cap):
+                    cap.release()
                 print("Error open page for camera", traceback.print_exc())
                 self.send_header('Content-type', 'text/html')
                 self.end_headers()
                 self.wfile.write(bytes("Error open page for connect to camera", "utf8"))
-        elif("/img" in self.path):
+        elif("/img" in path):
             showImg(self)
-        elif("/log" in self.path):
+        elif("/log" in path):
             showLog(self)
-        elif("/notify" in self.path):
+        elif("/config" in path):
             showLog(self)
-        elif("/facesResult" in self.path):
+            print("get config")
+        elif("/resultFaces" in path):
             showImg(self)
-        elif("/getCamConfig" in self.path):
+        elif("/getCamConfig" in path):
             try:
                 with open("./config/camConfig.json", 'rb') as fh:
                     data = fh.read()
@@ -323,29 +348,67 @@ class myHandler(BaseHTTPRequestHandler):
                 self.send_header('Content-type', 'text/html')
                 self.end_headers()
                 self.wfile.write(bytes("Error open img", "utf8"))
-        elif("/getFaces" == self.path):  # deleteFace
-            answer = "{\"geFacesResult\":["
+        elif("/getOneFace" == path):  # deleteFace
+            query = parsed_path.query
+            print("query=", query)
+            answer = "{\"getFaceResult\":["
             try:
                 self.send_header('Content-type', 'text/html')
                 self.end_headers()
                 listFiles = []
                 for dirname, dirnames, filenames in os.walk('./faces', topdown=False):
                     for filename in filenames:
-                        listFiles.append(filename)
+                        name = filename.split('_')
+                        key = name[0] + "_" + name[1]
+                        if(key == query):
+                            listFiles.append(filename)
+                print("listFiles=", listFiles)
                 strFiles = ','.join('"' + item + '"' for item in listFiles)
                 answer += strFiles + "]}"
+                print("listPhotos=" + answer)
+                self.wfile.write(bytes(answer, "utf8"))
+            except:
+                print("error get list images for person")
+                self.send_header('Content-type', 'text/html')
+                self.end_headers()
+                answer += "]}"
+                self.wfile.write(bytes(answer, "utf8"))
+        elif("/getFaces" == path):  # deleteFace
+            answer = "{\"getFacesResult\":"
+            try:
+                self.send_header('Content-type', 'text/html')
+                self.end_headers()
+                listNames = defaultdict(list)
+                for dirname, dirnames, filenames in os.walk('./faces', topdown=False):
+                    for filename in filenames:
+                        name = filename.split('_')
+                        key = name[0] + "_" + name[1]
+                        listNames[key].append(filename)
+                answer += json.dumps(listNames) + "}"
                 print("listPhotos=" + answer)
                 self.wfile.write(bytes(answer, "utf8"))
             except:
                 print("error get list images")
                 self.send_header('Content-type', 'text/html')
                 self.end_headers()
-                answer += "]}"
+                answer += "{}}"
                 self.wfile.write(bytes(answer, "utf8"))
-        elif("/favicon.ico" in self.path):
+        elif("/favicon.ico" in path):
             self.end_headers()
+        elif("/clearLog" == path):
+            answer = "{\"Result\":"
+            try:
+                num = str(randint(100000, 1000000))
+                os.replace(rootPath + "/log/server.log", rootPath + "/log/server_" + num + ".log")
+                answer += "\"ok\",\"Type\":\"info\"}"
+                print("answer=", answer)
+                self.wfile.write(bytes(answer, "utf8"))
+            except:
+                answer += "\"File does not exist.\",\"Type\":\"danger\"}"
+                print("error delete image=",  traceback.print_exc())
+                self.wfile.write(bytes(answer, "utf8"))
         else:
-            print("404 can not find file " + self.path)
+            print("404 get can not find file " + self.path)
             self.send_header('Content-type', 'text/html')
             self.end_headers()
             self.wfile.write(bytes("404! File not found.", "utf8"))

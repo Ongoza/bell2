@@ -45,13 +45,21 @@ export default class ListCameras extends React.Component {
   showCameras(){
       if(this.resultTr){
         let result =[];
-        result = this.tableResult.map((item, i) =>{
+        result = Object.keys(this.tableResult).map((key, i) =>{
+          console.log("item=",key)
+          let item = this.tableResult[key]
           let tbStyle = {textAlign:"center",verticalAlign: "middle"}
+          let recognation = "glyphicon glyphicon-ban-circle"
+          if(item['Recognation']=='true'){recognation = "glyphicon glyphicon-ok-circle"}
             return(
               <tr key={"item_"+i} style={tbStyle}>
                 <td style={tbStyle}>{i}</td>
                 <td style={tbStyle}>{item["Name"]}</td>
+                <td style={tbStyle}>{key}</td>
                 <td style={tbStyle}>{item["Location"]}</td>
+                  <td style={tbStyle}>
+                    <a href="#"><span id={item["IP"]} name={key} className={recognation} onClick={this.CameraRecognation.bind(this)}></span></a>
+                  </td>
                 <td style={tbStyle}>
                   <a href="#"><span id={item["IP"]} name={item["IP"]} className="glyphicon glyphicon-ban-circle" onClick={this.CameraStreaming.bind(this)}></span></a>
                 </td>
@@ -66,6 +74,26 @@ export default class ListCameras extends React.Component {
         return(<tr><td colSpan="4">Wait while connect to cameras </td></tr>)
       }
     }
+
+  CameraRecognation(ev){ ev.preventDefault();
+      fetch('setRecognation?'+ev.target)
+      .then(this.handleErrors)
+      .then((response) => {
+        response.json().then((body) => {
+          console.log("setRecognation.result",body)
+          if(ev.target.className=="glyphicon glyphicon-ban-circle"){
+            ev.target.className="glyphicon glyphicon-ok-circle"
+            // console.log("start recognation faces")
+          }else{
+            ev.target.className="glyphicon glyphicon-ban-circle"
+            }
+          this.resultTr=true;
+          console.log("this.resultTr",this.resultTr)
+          this.setState({ resultTr: !this.state.resultTr });
+        })
+      })
+    .catch((err)=>{console.log("Error connect to Server") })
+  }
 
   CameraStreaming(ev){ ev.preventDefault();
     console.log("show camera",ev.target)
@@ -93,7 +121,9 @@ export default class ListCameras extends React.Component {
             <tr style={{textAlign:"center",verticalAlign: "middle"}}>
               <th>#</th>
               <th style={{textAlign:"center",verticalAlign: "middle"}}>Name</th>
+              <th style={{textAlign:"center",verticalAlign: "middle"}}>IP</th>
               <th style={{textAlign:"center",verticalAlign: "middle"}}>Location</th>
+              <th style={{textAlign:"center",verticalAlign: "middle"}}>Face Recognation</th>
               <th style={{textAlign:"center",verticalAlign: "middle"}}>Streaming</th>
               <th style={{textAlign:"center",verticalAlign: "middle"}}>Video</th>
             </tr>

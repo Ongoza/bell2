@@ -14,6 +14,7 @@ import Logs from './Logs'
 import Notify from './Notify'
 import StartInfo from './StartInfo'
 import EditFace from './EditFace'
+import EditCamera from './EditCamera'
 
 var counter = 0
 var ctx
@@ -57,6 +58,7 @@ class App extends Component {
       <Route path="/notify" component={Notify}/>
       <Route path="/log" component={Logs}/>
       <Route path="/editFace/:id" component={EditFace}/>
+      <Route path="/editCamera/:id" component={EditCamera}/>
       </div>
     );
   }

@@ -1,1 +1,4 @@
-{"cameras": [{"Name": "test1", "IP": "192.168.1.108", "Resolution": "1024x720", "Location": "home"}]}
+{"cameras": {
+  "192.168.1.108":{"Name": "test1", "Port":":554" , "Resolution": "1024x720", "Location": "home","Recognation":"false"}
+  ,"0":{"Name": "usb", "Port": "", "Resolution": "1024x720", "Location": "home","Recognation":"true"}
+  }}

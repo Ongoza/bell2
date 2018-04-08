@@ -200,6 +200,17 @@ class myHandler(BaseHTTPRequestHandler):
                 answer += "\"Error update face\",\"Type\":\"danger\"}"
             print("file=", answer)
             self.wfile.write(bytes(answer, "utf8"))
+        elif("/updateCamera" == self.path):
+            answer = "{\"updateCameraResult\":"
+            # Not finished yet!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            try:
+                answer += "\"ok\",\"Type\":\"info\"}"
+                print("answer=", answer)
+                self.wfile.write(bytes(answer, "utf8"))
+            except:
+                answer += "\"File does not exist.\",\"Type\":\"danger\"}"
+                print("error update config=",  traceback.print_exc())
+                self.wfile.write(bytes(answer, "utf8"))
         elif("/deleteFace" == self.path):
             answer = "{\"deleteFacesResult\":"
             try:
@@ -332,7 +343,20 @@ class myHandler(BaseHTTPRequestHandler):
         elif("/log" in path):
             showLog(self)
         elif("/config" in path):
-            showLog(self)
+            filename = rootPath + path
+            try:
+                with open(filename, 'rb') as fh:
+                    data = fh.read()
+                print("data=", data)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(data)
+            except:
+                print("error open file")
+                self.send_header('Content-type', 'text/html')
+                self.end_headers()
+                self.wfile.write(bytes("Error open ", "utf8"))
+            return
             print("get config")
         elif("/resultFaces" in path):
             showImg(self)
@@ -393,6 +417,21 @@ class myHandler(BaseHTTPRequestHandler):
                 self.end_headers()
                 answer += "{}}"
                 self.wfile.write(bytes(answer, "utf8"))
+        elif("/setRecognation" in path):
+            query = parsed_path.query
+            print("setRecognation:", query)
+            try:
+                with open("./config/camConfig.json", 'r') as jsonFile:
+                    data = json.load(jsonFile)
+
+                self.send_header('Content-type', 'text/html')
+                self.end_headers()
+                self.wfile.write(bytes("Ok", "utf8"))
+            except:
+                print("error open file ",  traceback.print_exc())
+                self.send_header('Content-type', 'text/html')
+                self.end_headers()
+                self.wfile.write(bytes("Error open img", "utf8"))
         elif("/favicon.ico" in path):
             self.end_headers()
         elif("/clearLog" == path):

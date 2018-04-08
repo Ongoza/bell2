@@ -1,5 +1,9 @@
 import React from 'react';
-import {Table, Label, Button, ButtonGroup, Form, Alert, FormControl, FormGroup, Col, ControlLabel} from 'react-bootstrap';
+import {Table, Label, Button,Tooltip, OverlayTrigger , ButtonGroup, Form, Alert, FormControl, FormGroup, Col, ControlLabel} from 'react-bootstrap';
+import { LinkContainer } from 'react-router-bootstrap'
+
+const tooltipDelete =(<Tooltip id="tooltipDelete">Delete</Tooltip>);
+const tooltipEdit =(<Tooltip id="tooltipEdit">Edit</Tooltip>);
 
 export default class Config extends React.Component {
   constructor(props) {
@@ -97,16 +101,28 @@ export default class Config extends React.Component {
       let result =[];
       console.log("this.resultTr",this.resultTr)
       if(this.resultTr){
-        result = this.tableResult.map((item, i) =>{
+         result = Object.keys(this.tableResult).map((key, i) =>{
+          let item = this.tableResult[key]
+          console.log("item=",key,item["Name"])
           let tbStyle = {textAlign:"center",verticalAlign: "middle"}
         return (
           <tr key={"item_"+i} style={tbStyle}>
             <td style={tbStyle}>{i}</td>
             <td style={tbStyle}>{item["Name"]}</td>
-            <td style={tbStyle}>{item["IP"]}</td>
+            <td style={tbStyle}>{key}</td>
+            <td style={tbStyle}>{item["Port"]}</td>
+            <td style={tbStyle}>{item["Recognation"]}</td>
             <td style={tbStyle}>{item["Resolution"]}</td>
             <td style={tbStyle}>{item["Location"]}</td>
-            <td style={tbStyle}><a href="#"><span id={item} className="glyphicon glyphicon-remove" onClick={this.onDelete.bind(this)}></span></a></td>
+            <td style={tbStyle}>
+              <OverlayTrigger placement="top" overlay={tooltipDelete}>
+                <a href="#"><span id={item} className="glyphicon glyphicon-remove" onClick={this.onDelete.bind(this)}></span></a>
+              </OverlayTrigger>
+              &nbsp;&nbsp;
+              <OverlayTrigger placement="top" overlay={tooltipEdit}>
+                <LinkContainer to={"/editCamera/"+key}><a href="#"><span id={key} className="glyphicon glyphicon-edit" ></span></a></LinkContainer>
+              </OverlayTrigger>
+            </td>
           </tr>)})
       }
       this.resultTr=false;
@@ -145,15 +161,18 @@ export default class Config extends React.Component {
       return (
         <div>
           {this.state.resultTr}
-
-          <h3>Cameras list</h3>
             <Form horizontal name ="form" key ="form" >
               <FormGroup>
-              <Col sm={2}><Button bsStyle="primary" onClick={this.handleAddCamera} name ="bt" key ="bt" >Add camera</Button></Col>
+              <Col sm={3}><ControlLabel style={{fontSize: "200%"}}>Cameras list</ControlLabel> </Col>
+              <Col sm={2}><Button bsStyle="primary" onClick={this.handleAddCamera} name ="bt" key ="bt" >Add new camera</Button></Col>
+              </FormGroup>
+              <FormGroup>
                 <Col sm={2}><FormControl name ="Name" key ="Name"  inputRef={ref => { this.Name = ref; }}  type="text" placeholder="Name" /></Col>
                 <Col sm={2}><FormControl name ="IP" key ="IP"  inputRef={ref => { this.IP = ref; }}  type="text" placeholder="IP" /></Col>
+                <Col sm={2}><FormControl name ="Port" key ="Port"  inputRef={ref => { this.Port = ref; }}  type="text" placeholder="Port" /></Col>
+                <Col sm={2}><FormControl name ="Recognation" key ="Recognation"  inputRef={ref => { this.Recognation = ref; }}  type="text" placeholder="Recognation" /></Col>
                 <Col sm={2}><FormControl name ="Resolution" key ="Resolution"  inputRef={ref => { this.Resolution = ref; }}  type="text" placeholder="Resolution" /></Col>
-                <Col sm={3}><FormControl name ="Location" key ="Location"  inputRef={ref => { this.Location = ref; }}  type="text" placeholder="Location" /></Col>
+                <Col sm={2}><FormControl name ="Location" key ="Location"  inputRef={ref => { this.Location = ref; }}  type="text" placeholder="Location" /></Col>
 
               </FormGroup>
             </Form>
@@ -163,9 +182,11 @@ export default class Config extends React.Component {
                 <th>#</th>
                 <th style={tbStyle}>Name</th>
                 <th style={tbStyle}>IP</th>
+                <th style={tbStyle}>Port</th>
+                <th style={tbStyle}>Recognation</th>
                 <th style={tbStyle}>Resolution</th>
                 <th style={tbStyle}>Location</th>
-                <th style={tbStyle}>Delete</th>
+                <th style={tbStyle}>Action</th>
               </tr>
             </thead>
             <tbody>

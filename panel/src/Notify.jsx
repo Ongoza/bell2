@@ -28,16 +28,18 @@ export default class Notify extends React.Component {
   }
 
   takeTableData(){
-      fetch('config/notify.json')
+      fetch('../config/notify.json')
       .then(this.handleErrors)
       .then((response) => {
+        // console.log("Response=",response)
           let jResponse = response.json()
-          console.log("jResponse=",jResponse)
+          // console.log("jResponse=",jResponse)
           jResponse.then((body) => {
+            // console.log("body",body)
             // this.tableResult = body.geFacesResult
             // this.resultTr=true;
             this.config_body = body
-            console.log("this.resultTr",body)
+
 
             this.setState({ resultTr: !this.state.resultTr });
         })

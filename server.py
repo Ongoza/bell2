@@ -17,11 +17,22 @@ import threading
 from multiprocessing import Process, Manager
 from collections import defaultdict
 from random import randint
+import logging
 
 PORT_NUMBER = 8080
 rootPath = os.path.dirname(os.path.abspath(__file__))
 cameras = []
+formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+streamHandler = logging.StreamHandler()
+streamHandler.setFormatter(formatter)
+log = logging.getLogger('WebServer')
+fileHandler1 = logging.FileHandler('log/webServer.log', mode='a+')
+fileHandler1.setFormatter(formatter)
+log.setLevel("DEBUG")
+log.addHandler(fileHandler1)
+log.addHandler(streamHandler)
 
+log.info("starting web server")
 # This class will handles any incoming request from
 # the browser
 
@@ -32,7 +43,6 @@ def camera_detection(name):
 
 def showImg(self):
     filename = rootPath + self.path
-    # print("try open image " + filename)
     try:
         with open(filename, 'rb') as fh:
             data = fh.read()
@@ -40,7 +50,7 @@ def showImg(self):
         self.end_headers()
         self.wfile.write(data)
     except:
-        print("error open file")
+        log.error("".join(traceback.format_stack()))
         self.send_header('Content-type', 'text/html')
         self.end_headers()
         self.wfile.write(bytes("Error open img", "utf8"))
@@ -49,16 +59,15 @@ def showImg(self):
 
 def showLog(self):
     filename = rootPath + self.path
-    print("try open log " + filename)
     try:
-        with open(filename, 'ab+') as fh:
+        with open(filename, 'rb+') as fh:
             data = fh.read()
-        # print("data=",data)
+        # print("data=", filename, "\n=", data.decode('utf-8'))
         self.send_header('Content-type', 'text/html')
         self.end_headers()
         self.wfile.write(data)
     except:
-        print("error open file")
+        log.error("".join(traceback.format_stack()))
         self.send_header('Content-type', 'text/html')
         self.end_headers()
         self.wfile.write(bytes("Error open log", "utf8"))
@@ -69,7 +78,7 @@ class myHandler(BaseHTTPRequestHandler):
 
     # Handler for the GET requests
     def do_POST(self):
-        print("start post time=", self.path, str(int(round(time.time() * 1000))))
+        log.info("start post request " + str(self.path))
         form = cgi.FieldStorage(
             fp=self.rfile,
             headers=self.headers,
@@ -82,8 +91,6 @@ class myHandler(BaseHTTPRequestHandler):
         self.send_header('Content-type', 'text/html')
         self.end_headers()
         if("/uploadRecognation" == self.path):
-            print("start recognation")
-            print("start upload for recognation")
             answer = "{\"uploadRecognation\":"
             try:
                 file_data = form['file']
@@ -91,12 +98,12 @@ class myHandler(BaseHTTPRequestHandler):
                 file_type = text = file_data.type.split('/')
                 file_data = file_data.file.read()
                 file_len = len(file_data)
-                print("formName=", file_type[0], " fileNa=",  fileName, " fileSize=", file_len)
+                # print("formName=", file_type[0], " fileNa=",  fileName, " fileSize=", file_len)
                 if (file_len < 2000000):
                     if(file_type[0] == 'image'):
                         strTime = str(int(round(time.time() * 1000)))
                         newName = "./resultFaces/result_" + strTime + "." + file_type[1]
-                        print("start save image 0 time=", strTime, newName)
+                        # print("start save image 0 time=", strTime, newName)
                         pathFile = "./forRecognation/" + fileName
                         baseWidth = 1000
                         baseWidthDelta = baseWidth * 1.2
@@ -105,17 +112,17 @@ class myHandler(BaseHTTPRequestHandler):
                             # scale image to 1000px width
                             wPercent = (baseWidth / float(pil_image.size[0]))
                             hsize = int((float(pil_image.size[1]) * float(wPercent)))
-                            print("scale to ", baseWidth, hsize)
+                            # print("scale to ", baseWidth, hsize)
                             pil_image = pil_image.resize((baseWidth, hsize), Image.ANTIALIAS)
                         pil_image.save(pathFile)
                         # with open(pathFile, "wb+") as f:
                         #     f.write(file_data)
                         # try:
-                        print("save ready 1 time=", str(int(round(time.time() * 1000))))
+                        # print("save ready 1 time=", str(int(round(time.time() * 1000))))
                         mainFace.loadLocalData()
-                        print("save ready 2 time=", str(int(round(time.time() * 1000))))
+                        # print("save ready 2 time=", str(int(round(time.time() * 1000))))
                         res = mainFace.findFace(pathFile, newName)
-                        print("send ready 3 time=", str(int(round(time.time() * 1000))))
+                        # print("send ready 3 time=", str(int(round(time.time() * 1000))))
                         if(res == 1):
                             answer += "\"" + newName + "\",\"Type\":\"info\"}"
                         else:
@@ -126,12 +133,12 @@ class myHandler(BaseHTTPRequestHandler):
                     answer += "\"File is bigger then 2MB\",\"Type\":\"danger\"}"
                 del file_data
             except:
-                print("error sace file", traceback.print_exc())
+                log.error("".join(traceback.format_stack()))
                 answer += "\"Error file type\",\"Type\":\"danger\"}"
-            print("file=", answer)
+            log.debug(answer)
             self.wfile.write(bytes(answer, "utf8"))
         elif("/upload" == self.path):
-            print("start upload")
+            # print("start upload")
             answer = "{\"UploadPhoto\":"
             try:
                 file_data = form['file']
@@ -139,8 +146,7 @@ class myHandler(BaseHTTPRequestHandler):
                 file_type = file_data.type.split('/')
                 file_data = file_data.file.read()
                 file_len = len(file_data)
-                print("formName=", file_type[0], " fileName=",
-                      fileName, " fileSize=", file_len)
+                # print("formName=", file_type[0], " fileName=", fileName, " fileSize=", file_len)
                 if (file_len < 2000000):
                     if(file_type[0] == 'image'):
                         if(fileName != ""):
@@ -155,26 +161,25 @@ class myHandler(BaseHTTPRequestHandler):
                     answer += "\"File is bigger then 2MB\",\"Type\":\"danger\"}"
                 del file_data
             except:
-                print("error sace file",  traceback.print_exc())
+                # print("error sace file",  traceback.print_exc())
+                log.error("".join(traceback.format_stack()))
                 answer += "\"Error file type\",\"Type\":\"danger\"}"
-            print("file=", answer)
+            log.debug(answer)
             self.wfile.write(bytes(answer, "utf8"))
         elif("/updateFace" == self.path):
-            print("start updateFace")
+            # print("start updateFace")
             answer = "{\"resultUpdate\":"
             try:
                 fileName = form.getvalue('fileName')
-                print(form)
+                # print(form)
                 ffile = form.getvalue('file')
                 fileOld = form.getvalue('fileOld')
                 filesList = form.getvalue('filesList')
-                print("filesList", filesList)
+                # print("filesList", filesList)
                 if (ffile):
                     file_type = file_data.type.split('/')
                     file_data = file_data.file.read()
                     file_len = len(file_data)
-                    print("formName=", file_type[0], " fileName=",
-                          fileName, " fileSize=", file_len)
                     if (file_len < 2000000):
                         if(file_type[0] == 'image'):
                             if(fileName != ""):
@@ -196,20 +201,20 @@ class myHandler(BaseHTTPRequestHandler):
                         os.replace(rootPath + "/faces/" + root + ext, rootPath + "/faces/" + fileName + '_' + num + ext)
                     answer += "\"Renamed\",\"Type\":\"info\"}"
             except:
-                print("error sace file",  traceback.print_exc())
+                log.error("".join(traceback.format_stack()))
                 answer += "\"Error update face\",\"Type\":\"danger\"}"
-            print("file=", answer)
+            log.debug(answer)
             self.wfile.write(bytes(answer, "utf8"))
         elif("/updateCamera" == self.path):
             answer = "{\"updateCameraResult\":"
             # Not finished yet!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             try:
                 answer += "\"ok\",\"Type\":\"info\"}"
-                print("answer=", answer)
+                log.debug(answer)
                 self.wfile.write(bytes(answer, "utf8"))
             except:
                 answer += "\"File does not exist.\",\"Type\":\"danger\"}"
-                print("error update config=",  traceback.print_exc())
+                log.error("".join(traceback.format_stack()))
                 self.wfile.write(bytes(answer, "utf8"))
         elif("/deleteFace" == self.path):
             answer = "{\"deleteFacesResult\":"
@@ -218,11 +223,11 @@ class myHandler(BaseHTTPRequestHandler):
                 path = rootPath + "/faces/" + name
                 os.remove(path)
                 answer += "\"ok\",\"name\":\"" + name + "\",\"Type\":\"info\"}"
-                print("answer=", answer)
+                log.debug(answer)
                 self.wfile.write(bytes(answer, "utf8"))
             except:
                 answer += "\"File does not exist.\",\"Type\":\"danger\"}"
-                print("error delete image=",  traceback.print_exc())
+                log.error("".join(traceback.format_stack()))
                 self.wfile.write(bytes(answer, "utf8"))
         elif("/getVideo" == self.path):
             answer = "{\"Result\":"
@@ -234,25 +239,24 @@ class myHandler(BaseHTTPRequestHandler):
                 else:
                     pass
 
-                print("camIP=", camIP)
+                # print("camIP=", camIP)
                 answer += "\"ok\",\"name\":\"" + camIP + "\",\"Type\":\"info\"}"
-                print("answer=", answer)
+                log.debug(answer)
                 self.wfile.write(bytes(answer, "utf8"))
             except:
                 answer += "\"Can not connect to camera.\",\"Type\":\"danger\"}"
-                print("error get video=",  traceback.print_exc())
+                log.error("".join(traceback.format_stack()))
                 self.wfile.write(bytes(answer, "utf8"))
         elif("/deleteCamConfig" == self.path):
             answer = "{\"deleteCamConfigResult\":"
             try:
                 name = form['name'].value
-
                 answer += "\"ok\",\"name\":\"" + name + "\",\"Type\":\"info\"}"
-                print("answer=", answer)
+                log.debug(answer)
                 self.wfile.write(bytes(answer, "utf8"))
             except:
                 answer += "\"File does not exist.\",\"Type\":\"danger\"}"
-                print("error delete camConfig=",  traceback.print_exc())
+                log.error("".join(traceback.format_stack()))
                 self.wfile.write(bytes(answer, "utf8"))
         elif("/addCamConfig" == self.path):
             answer = "{\"addCamConfigResult\":"
@@ -267,25 +271,24 @@ class myHandler(BaseHTTPRequestHandler):
                     json.dump(config, f, ensure_ascii=False)
                 # print("newJson=", newCam)
                 answer += "\"ok\",\"name\":\"" + newCam["Name"] + "\",\"Type\":\"info\"}"
-                print("answer=", answer)
+                log.debug(answer)
                 self.wfile.write(bytes(answer, "utf8"))
             except:
                 answer += "\"Can not add to cam config.\",\"Type\":\"danger\"}"
-                print("error addCamConfig=", traceback.print_exc())
+                log.error("".join(traceback.format_stack()))
                 self.wfile.write(bytes(answer, "utf8"))
-
         else:
             answer = "{urlNotFound:\"Url is not exist.\",\"Type\":\"danger\"}"
-            print("404 can not path=", self.path)
+            log.error("404 can not path=" + str(self.path))
             self.wfile.write(bytes(answer, "utf8"))
 
     def do_GET(self):
         # print("photos=", )
         parsed_path = urlparse(self.path)
         path = parsed_path.path
+        log.info("Start Get request " + str(self.path))
         self.send_response(200)
         if("/faces" in path):
-            print("start face")
             showImg(self)
         if("/stream" in path):
             try:
@@ -295,17 +298,17 @@ class myHandler(BaseHTTPRequestHandler):
                 #strUrl = "rtsp://os:Bluher11_@192.168.1.108:554/cam/realmonitor?channel=1&subtype=1"
                 strUrl = 0
                 cap = cv2.VideoCapture(strUrl)
-                print("Camera ", cap.isOpened())
+                # print("Camera ", cap.isOpened())
                 if (cap.isOpened()):
                     self.send_header('Content-type', 'multipart/x-mixed-replace; boundary=--jpgboundary')
                     self.end_headers()
-                    print("Connected to camera 0=")
+                    # print("Connected to camera 0=")
                     while True:
                         try:
                             retval, im = cap.read()
                             ret, jpg = cv2.imencode('.jpg', im)
                             jpg_bytes = jpg.tobytes()
-                            print("bute ret=", ret)
+                            # print("bute ret=", ret)
                             self.wfile.write("--jpgboundary\r\n".encode())
                             self.send_header('Content-type', 'image/jpeg')
                             self.send_header('Content-length', len(jpg_bytes))
@@ -313,7 +316,7 @@ class myHandler(BaseHTTPRequestHandler):
                             self.wfile.write(jpg_bytes)
                             time.sleep(0.5)
                         except:
-                            print("error stream camera")
+                            log.error("".join(traceback.format_stack()))
                             with open(rootPath + "/img/error.png", 'rb') as fh:
                                 data = fh.read()
                             self.send_header('Content-type', 'image/jpeg')
@@ -322,7 +325,7 @@ class myHandler(BaseHTTPRequestHandler):
                             break
                         # time.sleep(self.server.read_delay)
                 else:
-                    print("Error connect to camera")
+                    log.error("Error connect to camera")
                     cap.release()
                     with open(rootPath + "/img/error.png", 'rb') as fh:
                         data = fh.read()
@@ -334,7 +337,7 @@ class myHandler(BaseHTTPRequestHandler):
             except:
                 if (cap):
                     cap.release()
-                print("Error open page for camera", traceback.print_exc())
+                log.error("".join(traceback.format_stack()))
                 self.send_header('Content-type', 'text/html')
                 self.end_headers()
                 self.wfile.write(bytes("Error open page for connect to camera", "utf8"))
@@ -347,17 +350,17 @@ class myHandler(BaseHTTPRequestHandler):
             try:
                 with open(filename, 'rb') as fh:
                     data = fh.read()
-                print("data=", data)
+                # print("data=", data)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
                 self.wfile.write(data)
+                log.info("return config file")
             except:
-                print("error open file")
+                log.error("".join(traceback.format_stack()))
                 self.send_header('Content-type', 'text/html')
                 self.end_headers()
                 self.wfile.write(bytes("Error open ", "utf8"))
             return
-            print("get config")
         elif("/resultFaces" in path):
             showImg(self)
         elif("/getCamConfig" in path):
@@ -368,7 +371,7 @@ class myHandler(BaseHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(data)
             except:
-                print("error open file ",  traceback.print_exc())
+                log.error("".join(traceback.format_stack()))
                 self.send_header('Content-type', 'text/html')
                 self.end_headers()
                 self.wfile.write(bytes("Error open img", "utf8"))
@@ -386,13 +389,13 @@ class myHandler(BaseHTTPRequestHandler):
                         key = name[0] + "_" + name[1]
                         if(key == query):
                             listFiles.append(filename)
-                print("listFiles=", listFiles)
+                # print("listFiles=", listFiles)
                 strFiles = ','.join('"' + item + '"' for item in listFiles)
                 answer += strFiles + "]}"
-                print("listPhotos=" + answer)
+                log.debug(answer)
                 self.wfile.write(bytes(answer, "utf8"))
             except:
-                print("error get list images for person")
+                log.error("".join(traceback.format_stack()))
                 self.send_header('Content-type', 'text/html')
                 self.end_headers()
                 answer += "]}"
@@ -409,26 +412,26 @@ class myHandler(BaseHTTPRequestHandler):
                         key = name[0] + "_" + name[1]
                         listNames[key].append(filename)
                 answer += json.dumps(listNames) + "}"
-                print("listPhotos=" + answer)
+                log.debug(answer)
                 self.wfile.write(bytes(answer, "utf8"))
             except:
-                print("error get list images")
+                log.error("".join(traceback.format_stack()))
                 self.send_header('Content-type', 'text/html')
                 self.end_headers()
                 answer += "{}}"
                 self.wfile.write(bytes(answer, "utf8"))
         elif("/setRecognation" in path):
             query = parsed_path.query
-            print("setRecognation:", query)
+            # print("setRecognation:", query)
             try:
                 with open("./config/camConfig.json", 'r') as jsonFile:
                     data = json.load(jsonFile)
-
                 self.send_header('Content-type', 'text/html')
                 self.end_headers()
                 self.wfile.write(bytes("Ok", "utf8"))
+                log.debug(answer)
             except:
-                print("error open file ",  traceback.print_exc())
+                log.error("".join(traceback.format_stack()))
                 self.send_header('Content-type', 'text/html')
                 self.end_headers()
                 self.wfile.write(bytes("Error open img", "utf8"))
@@ -440,14 +443,14 @@ class myHandler(BaseHTTPRequestHandler):
                 num = str(randint(100000, 1000000))
                 os.replace(rootPath + "/log/server.log", rootPath + "/log/server_" + num + ".log")
                 answer += "\"ok\",\"Type\":\"info\"}"
-                print("answer=", answer)
+                log.debug(answer)
                 self.wfile.write(bytes(answer, "utf8"))
             except:
                 answer += "\"File does not exist.\",\"Type\":\"danger\"}"
-                print("error delete image=",  traceback.print_exc())
+                log.error("".join(traceback.format_stack()))
                 self.wfile.write(bytes(answer, "utf8"))
         else:
-            print("404 get can not find file " + self.path)
+            log.error("404 get can not find file " + str(self.path))
             self.send_header('Content-type', 'text/html')
             self.end_headers()
             self.wfile.write(bytes("404! File not found.", "utf8"))
@@ -466,9 +469,9 @@ if __name__ == '__main__':
         # p.start()
         # cameras.append(p)
         # p.join()
-        print('Starting server, use <Ctrl-C> to stop. Port:', PORT_NUMBER)
+        log.info('Starting server, use <Ctrl-C> to stop. Port:' + str(PORT_NUMBER))
         server.serve_forever()
 
     except KeyboardInterrupt:
-        print("Stop cmd received, shutting down the web server")
+        log.info("Stop cmd received, shutting down the web server")
         server.socket.close()

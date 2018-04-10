@@ -9,7 +9,7 @@ class Camera extends Component {
     this.connection = new WebSocket('ws://localhost:8888');
     //this.connection.binaryType="arraybuffer";
     this.connection.onmessage = evt => {
-      console.log("ws="+evt.data+" type="+typeof(evt.data))
+      // console.log("ws="+evt.data+" type="+typeof(evt.data))
       var blob = new Blob( [ evt.data ], { type: "image/png" } );
       var urlCreator = window.URL || window.webkitURL;
       var imageUrl = urlCreator.createObjectURL( blob );

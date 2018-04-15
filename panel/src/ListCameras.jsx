@@ -27,7 +27,8 @@ export default class ListCameras extends React.Component {
   }
 
   takeListCameras(){
-      fetch('getCamConfig')
+    let str_auth = 'Basic ' + localStorage.getItem('id_token')
+    fetch('getCamConfig/',{headers: new Headers({'Authorization': str_auth})})
       .then(this.handleErrors)
       .then((response) => {
         response.json().then((body) => {

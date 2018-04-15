@@ -29,7 +29,9 @@ export default class ListPhotos extends React.Component {
   }
 
   takeTableData(){
-      fetch('getFaces')
+    let str_auth = 'Basic ' + localStorage.getItem('id_token')
+    if(str_auth){
+    fetch('getFaces/',{headers: new Headers({'Authorization': str_auth})})
       .then(this.handleErrors)
       .then((response) => {
           let jResponse = response.json()
@@ -44,6 +46,9 @@ export default class ListPhotos extends React.Component {
     .catch((err)=>{
       console.log("Error connect to Server")
     })
+  }else{
+    console.log("Please login")
+  }
 }
 
   showTable(){

@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from urllib.parse import urlparse
+from urllib.parse import urlparse, parse_qs
 import mainFace
 # import camera_con
 import sys
@@ -18,8 +18,12 @@ from multiprocessing import Process, Manager
 from collections import defaultdict
 from random import randint
 import logging
+from file_read_backwards import FileReadBackwards
+import base64
 
 PORT_NUMBER = 8080
+USER_LOGIN = 'demo'
+USER_PASS = 'demo'
 rootPath = os.path.dirname(os.path.abspath(__file__))
 cameras = []
 formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
@@ -58,14 +62,33 @@ def showImg(self):
 
 
 def showLog(self):
-    filename = rootPath + self.path
+    parsed_path = urlparse(self.path)
+    filename = rootPath + parsed_path.path
+    query = parse_qs(parsed_path.query)
+    # print("\n\n!!!start open==", filename, query, query['start'])
+    data = ""
+    start = 0
+    end = 100
+    cnt = 0
     try:
-        with open(filename, 'rb+') as fh:
-            data = fh.read()
-        # print("data=", filename, "\n=", data.decode('utf-8'))
+        if(query['start'][0]):
+            start = int(query['start'][0])
+        if(query['end'][0]):
+            end = int(query['end'][0])
+    except:
+        log.error("can not get query parameters " + str(self.path))
+    print("query=", start, end)
+    try:
+        with FileReadBackwards(filename, encoding="utf-8") as fh:
+            for line in fh:
+                if(cnt >= start and cnt < end):
+                    data += line + "\n"
+                cnt += 1
+        data += "Total lines===" + str(cnt) + "\n"
+        # print(cnt, "data=", filename, "\n=", data)
         self.send_header('Content-type', 'text/html')
         self.end_headers()
-        self.wfile.write(data)
+        self.wfile.write(str.encode(data))
     except:
         log.error("".join(traceback.format_stack()))
         self.send_header('Content-type', 'text/html')
@@ -75,6 +98,12 @@ def showLog(self):
 
 
 class myHandler(BaseHTTPRequestHandler):
+
+    def do_AUTHHEAD(self):
+        self.send_response(200)
+        self.send_header('WWW-Authenticate', 'Basic realm="BellRealm"')
+        self.send_header('Content-type', 'application/json')
+        self.end_headers()
 
     # Handler for the GET requests
     def do_POST(self):
@@ -283,187 +312,241 @@ class myHandler(BaseHTTPRequestHandler):
             self.wfile.write(bytes(answer, "utf8"))
 
     def do_GET(self):
-        # print("photos=", )
+        key = self.server.get_auth_key()
+        print("auth=", self.headers.get('Authorization'))
+        self.send_response(200)
         parsed_path = urlparse(self.path)
         path = parsed_path.path
         log.info("Start Get request " + str(self.path))
-        self.send_response(200)
+        print("get key=", key, self.headers.get('Authorization'))
+        # ''' Present frontpage with user authentication. '''
         if("/faces" in path):
             showImg(self)
-        if("/stream" in path):
+        elif("/log/img/" in path):
+            showImg(self)
+        elif("/img/" in path):
+            showImg(self)
+        elif("/login/" in path):
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            query = parse_qs(parsed_path.query)
+            user_id = ''
+            user_pass = ''
+            print("\n\n!!!start open==", query)
             try:
-                # vlc rtsp://os@Bluher11_@192.168.1.108:554
-                # rtsp://os:Bluher11_@192.168.1.108:554/cam/realmonitor?channel=1&subtype=0
-                # rtsp://os:Bluher11_@192.168.1.108:554/cam/realmonitor?channel=1&subtype=1
-                #strUrl = "rtsp://os:Bluher11_@192.168.1.108:554/cam/realmonitor?channel=1&subtype=1"
-                strUrl = 0
-                cap = cv2.VideoCapture(strUrl)
-                # print("Camera ", cap.isOpened())
-                if (cap.isOpened()):
-                    self.send_header('Content-type', 'multipart/x-mixed-replace; boundary=--jpgboundary')
+                if(query['id'][0]):
+                    user_id = query['id'][0]
+                if(query['pass'][0]):
+                    user_pass = query['pass'][0]
+            except:
+                log.error("can not get query parameters " + str(self.path))
+            print("id=", user_id, user_pass)
+            if(user_id == USER_LOGIN and user_pass == USER_PASS):
+                response = {'success': True, 'key': str(key)}
+                self.wfile.write(bytes(json.dumps(response), 'utf-8'))
+            else:
+                response = {'success': False, 'error': 'User is not exist!'}
+                self.wfile.write(bytes(json.dumps(response), 'utf-8'))
+        elif self.headers.get('Authorization') == None:
+            print("start none")
+            self.do_AUTHHEAD()
+            response = {'success': False, 'error': 'No auth header received'}
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            self.wfile.write(bytes(json.dumps(response), 'utf-8'))
+            print("start get ", json.dumps(response))
+        elif self.headers.get('Authorization') == 'Basic ' + str(key):
+            print("start auth")
+            if("/stream" in path):
+                try:
+                    # vlc rtsp://os@Bluher11_@192.168.1.108:554
+                    # rtsp://os:Bluher11_@192.168.1.108:554/cam/realmonitor?channel=1&subtype=0
+                    # rtsp://os:Bluher11_@192.168.1.108:554/cam/realmonitor?channel=1&subtype=1
+                    # strUrl = "rtsp://os:Bluher11_@192.168.1.108:554/cam/realmonitor?channel=1&subtype=1"
+                    strUrl = 0
+                    cap = cv2.VideoCapture(strUrl)
+                    # print("Camera ", cap.isOpened())
+                    if (cap.isOpened()):
+                        self.send_header('Content-type', 'multipart/x-mixed-replace; boundary=--jpgboundary')
+                        self.end_headers()
+                        # print("Connected to camera 0=")
+                        while True:
+                            try:
+                                retval, im = cap.read()
+                                ret, jpg = cv2.imencode('.jpg', im)
+                                jpg_bytes = jpg.tobytes()
+                                # print("bute ret=", ret)
+                                self.wfile.write("--jpgboundary\r\n".encode())
+                                self.send_header('Content-type', 'image/jpeg')
+                                self.send_header('Content-length', len(jpg_bytes))
+                                self.end_headers()
+                                self.wfile.write(jpg_bytes)
+                                time.sleep(0.5)
+                            except:
+                                log.error("".join(traceback.format_stack()))
+                                with open(rootPath + "/img/error.png", 'rb') as fh:
+                                    data = fh.read()
+                                self.send_header('Content-type', 'image/jpeg')
+                                self.end_headers()
+                                self.wfile.write(data)
+                                break
+                            # time.sleep(self.server.read_delay)
+                    else:
+                        log.error("Error connect to camera")
+                        cap.release()
+                        with open(rootPath + "/img/error.png", 'rb') as fh:
+                            data = fh.read()
+                        self.send_header('Content-type', 'image/jpeg')
+                        self.end_headers()
+                        self.wfile.write(data)
+                    if (cap):
+                        cap.release()
+                except:
+                    if (cap):
+                        cap.release()
+                    log.error("".join(traceback.format_stack()))
+                    self.send_header('Content-type', 'text/html')
                     self.end_headers()
-                    # print("Connected to camera 0=")
-                    while True:
-                        try:
-                            retval, im = cap.read()
-                            ret, jpg = cv2.imencode('.jpg', im)
-                            jpg_bytes = jpg.tobytes()
-                            # print("bute ret=", ret)
-                            self.wfile.write("--jpgboundary\r\n".encode())
-                            self.send_header('Content-type', 'image/jpeg')
-                            self.send_header('Content-length', len(jpg_bytes))
-                            self.end_headers()
-                            self.wfile.write(jpg_bytes)
-                            time.sleep(0.5)
-                        except:
-                            log.error("".join(traceback.format_stack()))
-                            with open(rootPath + "/img/error.png", 'rb') as fh:
-                                data = fh.read()
-                            self.send_header('Content-type', 'image/jpeg')
-                            self.end_headers()
-                            self.wfile.write(data)
-                            break
-                        # time.sleep(self.server.read_delay)
-                else:
-                    log.error("Error connect to camera")
-                    cap.release()
-                    with open(rootPath + "/img/error.png", 'rb') as fh:
+                    self.wfile.write(bytes("Error open page for connect to camera", "utf8"))
+            elif("/log/" in path):
+                showLog(self)
+            elif("/config/" in path):
+                filename = rootPath + path
+                try:
+                    with open(filename, 'rb') as fh:
                         data = fh.read()
-                    self.send_header('Content-type', 'image/jpeg')
+                    # print("data=", data)
+                    self.send_header('Content-type', 'application/json')
                     self.end_headers()
                     self.wfile.write(data)
-                if (cap):
-                    cap.release()
-            except:
-                if (cap):
-                    cap.release()
-                log.error("".join(traceback.format_stack()))
+                    log.info("return config file")
+                except:
+                    log.error("".join(traceback.format_stack()))
+                    self.send_header('Content-type', 'text/html')
+                    self.end_headers()
+                    self.wfile.write(bytes("Error open ", "utf8"))
+                return
+            elif("/resultFaces" in path):
+                showImg(self)
+            elif("/getCamConfig/" in path):
+                print("!!!!/ getCamConfig /")
+                try:
+                    with open("./config/camConfig.json", 'rb') as fh:
+                        data = fh.read()
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(data)
+                except:
+                    log.error("".join(traceback.format_stack()))
+                    self.send_header('Content-type', 'text/html')
+                    self.end_headers()
+                    self.wfile.write(bytes("Error open img", "utf8"))
+            elif("/getOneFace" == path):  # deleteFace
+                query = parsed_path.query
+                print("query=", query)
+                answer = "{\"getFaceResult\":["
+                try:
+                    self.send_header('Content-type', 'text/html')
+                    self.end_headers()
+                    listFiles = []
+                    for dirname, dirnames, filenames in os.walk('./faces', topdown=False):
+                        for filename in filenames:
+                            name = filename.split('_')
+                            key = name[0] + "_" + name[1]
+                            if(key == query):
+                                listFiles.append(filename)
+                    # print("listFiles=", listFiles)
+                    strFiles = ','.join('"' + item + '"' for item in listFiles)
+                    answer += strFiles + "]}"
+                    log.debug(answer)
+                    self.wfile.write(bytes(answer, "utf8"))
+                except:
+                    log.error("".join(traceback.format_stack()))
+                    self.send_header('Content-type', 'text/html')
+                    self.end_headers()
+                    answer += "]}"
+                    self.wfile.write(bytes(answer, "utf8"))
+            elif("/getFaces/" == path):  # deleteFace
+                answer = "{\"getFacesResult\":"
+                try:
+                    self.send_header('Content-type', 'text/html')
+                    self.end_headers()
+                    listNames = defaultdict(list)
+                    for dirname, dirnames, filenames in os.walk('./faces', topdown=False):
+                        for filename in filenames:
+                            name = filename.split('_')
+                            key = name[0] + "_" + name[1]
+                            listNames[key].append(filename)
+                    answer += json.dumps(listNames) + "}"
+                    log.debug(answer)
+                    self.wfile.write(bytes(answer, "utf8"))
+                except:
+                    log.error("".join(traceback.format_stack()))
+                    self.send_header('Content-type', 'text/html')
+                    self.end_headers()
+                    answer += "{}}"
+                    self.wfile.write(bytes(answer, "utf8"))
+            elif("/setRecognation" in path):
+                query = parsed_path.query
+                print("setRecognation:", query)
+                try:
+                    with open("./config/camConfig.json", 'r') as jsonFile:
+                        data = json.load(jsonFile)
+                    self.send_header('Content-type', 'text/html')
+                    self.end_headers()
+                    self.wfile.write(bytes("Ok", "utf8"))
+                    log.debug(answer)
+                except:
+                    log.error("".join(traceback.format_stack()))
+                    self.send_header('Content-type', 'text/html')
+                    self.end_headers()
+                    self.wfile.write(bytes("Error open img", "utf8"))
+            elif("/favicon.ico" in path):
+                self.end_headers()
+            elif("/clearLog/" == path):
+                answer = "{\"Result\":"
+                try:
+                    num = str(randint(100000, 1000000))
+                    os.replace(rootPath + "/log/server.log", rootPath + "/log/server_" + num + ".log")
+                    answer += "\"ok\",\"Type\":\"info\"}"
+                    log.debug(answer)
+                    self.wfile.write(bytes(answer, "utf8"))
+                except:
+                    answer += "\"File does not exist.\",\"Type\":\"danger\"}"
+                    log.error("".join(traceback.format_stack()))
+                    self.wfile.write(bytes(answer, "utf8"))
+            else:
+                log.error("404 get can not find file " + str(self.path))
                 self.send_header('Content-type', 'text/html')
                 self.end_headers()
-                self.wfile.write(bytes("Error open page for connect to camera", "utf8"))
-        elif("/img" in path):
-            showImg(self)
-        elif("/log" in path):
-            showLog(self)
-        elif("/config" in path):
-            filename = rootPath + path
-            try:
-                with open(filename, 'rb') as fh:
-                    data = fh.read()
-                # print("data=", data)
-                self.send_header('Content-type', 'application/json')
-                self.end_headers()
-                self.wfile.write(data)
-                log.info("return config file")
-            except:
-                log.error("".join(traceback.format_stack()))
-                self.send_header('Content-type', 'text/html')
-                self.end_headers()
-                self.wfile.write(bytes("Error open ", "utf8"))
-            return
-        elif("/resultFaces" in path):
-            showImg(self)
-        elif("/getCamConfig" in path):
-            try:
-                with open("./config/camConfig.json", 'rb') as fh:
-                    data = fh.read()
-                self.send_header('Content-type', 'application/json')
-                self.end_headers()
-                self.wfile.write(data)
-            except:
-                log.error("".join(traceback.format_stack()))
-                self.send_header('Content-type', 'text/html')
-                self.end_headers()
-                self.wfile.write(bytes("Error open img", "utf8"))
-        elif("/getOneFace" == path):  # deleteFace
-            query = parsed_path.query
-            print("query=", query)
-            answer = "{\"getFaceResult\":["
-            try:
-                self.send_header('Content-type', 'text/html')
-                self.end_headers()
-                listFiles = []
-                for dirname, dirnames, filenames in os.walk('./faces', topdown=False):
-                    for filename in filenames:
-                        name = filename.split('_')
-                        key = name[0] + "_" + name[1]
-                        if(key == query):
-                            listFiles.append(filename)
-                # print("listFiles=", listFiles)
-                strFiles = ','.join('"' + item + '"' for item in listFiles)
-                answer += strFiles + "]}"
-                log.debug(answer)
-                self.wfile.write(bytes(answer, "utf8"))
-            except:
-                log.error("".join(traceback.format_stack()))
-                self.send_header('Content-type', 'text/html')
-                self.end_headers()
-                answer += "]}"
-                self.wfile.write(bytes(answer, "utf8"))
-        elif("/getFaces" == path):  # deleteFace
-            answer = "{\"getFacesResult\":"
-            try:
-                self.send_header('Content-type', 'text/html')
-                self.end_headers()
-                listNames = defaultdict(list)
-                for dirname, dirnames, filenames in os.walk('./faces', topdown=False):
-                    for filename in filenames:
-                        name = filename.split('_')
-                        key = name[0] + "_" + name[1]
-                        listNames[key].append(filename)
-                answer += json.dumps(listNames) + "}"
-                log.debug(answer)
-                self.wfile.write(bytes(answer, "utf8"))
-            except:
-                log.error("".join(traceback.format_stack()))
-                self.send_header('Content-type', 'text/html')
-                self.end_headers()
-                answer += "{}}"
-                self.wfile.write(bytes(answer, "utf8"))
-        elif("/setRecognation" in path):
-            query = parsed_path.query
-            # print("setRecognation:", query)
-            try:
-                with open("./config/camConfig.json", 'r') as jsonFile:
-                    data = json.load(jsonFile)
-                self.send_header('Content-type', 'text/html')
-                self.end_headers()
-                self.wfile.write(bytes("Ok", "utf8"))
-                log.debug(answer)
-            except:
-                log.error("".join(traceback.format_stack()))
-                self.send_header('Content-type', 'text/html')
-                self.end_headers()
-                self.wfile.write(bytes("Error open img", "utf8"))
-        elif("/favicon.ico" in path):
-            self.end_headers()
-        elif("/clearLog" == path):
-            answer = "{\"Result\":"
-            try:
-                num = str(randint(100000, 1000000))
-                os.replace(rootPath + "/log/server.log", rootPath + "/log/server_" + num + ".log")
-                answer += "\"ok\",\"Type\":\"info\"}"
-                log.debug(answer)
-                self.wfile.write(bytes(answer, "utf8"))
-            except:
-                answer += "\"File does not exist.\",\"Type\":\"danger\"}"
-                log.error("".join(traceback.format_stack()))
-                self.wfile.write(bytes(answer, "utf8"))
+                self.wfile.write(bytes("404! File not found.", "utf8"))
         else:
-            log.error("404 get can not find file " + str(self.path))
-            self.send_header('Content-type', 'text/html')
-            self.end_headers()
-            self.wfile.write(bytes("404! File not found.", "utf8"))
-        return
+            print("start none else")
+            self.do_AUTHHEAD()
+            response = {'success': False, 'error': 'Invalid credentials'}
+            self.wfile.write(bytes(json.dumps(response), 'utf-8'))
+            print(json.dumps(response))
+            return
 
 
 class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
     """Handle requests in a separate thread."""
+    key = ''
+
+    def __init__(self, address, handlerClass=myHandler):
+        super().__init__(address, handlerClass)
+
+    def set_auth(self, username, password):
+        self.key = base64.b64encode(bytes('%s:%s' % (username, password), 'utf-8')).decode('ascii')
+
+    def get_auth_key(self):
+        return self.key
 
 
 if __name__ == '__main__':
     try:
         server = ThreadedHTTPServer(('localhost', PORT_NUMBER), myHandler)
+        server.set_auth(USER_LOGIN, USER_PASS)
         # print('Starting cameras processes')
         # p = Process(target=camera_detection, args=('bob',))
         # p.start()

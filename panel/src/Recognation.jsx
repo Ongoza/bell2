@@ -20,7 +20,7 @@ export default class Recognation extends React.Component {
     ev.preventDefault()
     window.location.reload()
   }
-  
+
   handleUploadImage(ev){ ev.preventDefault()
     let ifFiles = this.fileUpload.files.length
     if(ifFiles>0){
@@ -29,7 +29,7 @@ export default class Recognation extends React.Component {
         console.log("server send ok")
         const data = new FormData()
         this.setState({ loading: false})
-        data.append('file', this.fileUpload.files[0])
+        data.append('file', this.fileUpload.files[0])        
         fetch('uploadRecognation', {
           method: 'POST',
           body: data,

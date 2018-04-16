@@ -130,7 +130,7 @@ class myHandler(BaseHTTPRequestHandler):
                 # print("formName=", file_type[0], " fileNa=",  fileName, " fileSize=", file_len)
                 if (file_len < 2000000):
                     if(file_type[0] == 'image'):
-                        strTime = str(int(round(time.time() * 1000)))
+                        strTime = str(int(round(time.time() * 100000)))
                         newName = "./resultFaces/result_" + strTime + "." + file_type[1]
                         # print("start save image 0 time=", strTime, newName)
                         pathFile = "./forRecognation/" + fileName
@@ -175,13 +175,14 @@ class myHandler(BaseHTTPRequestHandler):
                 file_type = file_data.type.split('/')
                 file_data = file_data.file.read()
                 file_len = len(file_data)
-                # print("formName=", file_type[0], " fileName=", fileName, " fileSize=", file_len)
+                num = str(int(round(time.time() * 100000)))
+                print("formName=", file_type[0], " fileName=", fileName, " fileSize=", file_len)
                 if (file_len < 2000000):
                     if(file_type[0] == 'image'):
                         if(fileName != ""):
                             with open("./faces/" + fileName + "." + file_type[1], "wb+") as f:
                                 f.write(file_data)
-                            answer += "\"Success\",\"Type\":\"info\"}"
+                            answer += "\"Success\",\"fileId\":\"face_" + num + "\",\"Type\":\"info\"}"
                         else:
                             answer += "\"Error Photo name type\",\"Type\":\"danger\"}"
                     else:
@@ -189,6 +190,8 @@ class myHandler(BaseHTTPRequestHandler):
                 else:
                     answer += "\"File is bigger then 2MB\",\"Type\":\"danger\"}"
                 del file_data
+                with open("./config/update/face_" + num, "w+") as f:
+                    f.write("new;:;" + fileName)
             except:
                 # print("error sace file",  traceback.print_exc())
                 log.error("".join(traceback.format_stack()))
@@ -200,10 +203,10 @@ class myHandler(BaseHTTPRequestHandler):
             answer = "{\"resultUpdate\":"
             try:
                 fileName = form.getvalue('fileName')
-                # print(form)
                 ffile = form.getvalue('file')
                 fileOld = form.getvalue('fileOld')
                 filesList = form.getvalue('filesList')
+                num = str(int(round(time.time() * 100000)))
                 # print("filesList", filesList)
                 if (ffile):
                     file_type = file_data.type.split('/')
@@ -214,7 +217,7 @@ class myHandler(BaseHTTPRequestHandler):
                             if(fileName != ""):
                                 with open("./faces/" + fileName + "." + file_type[1], "wb+") as f:
                                     f.write(file_data)
-                                answer += "\"Success\",\"Type\":\"info\"}"
+                                answer += "\"Success\",\"fileId\":\"face_" + num + "\",\"Type\":\"info\"}"
                             else:
                                 answer += "\"Error Photo name type\",\"Type\":\"danger\"}"
                         else:
@@ -226,21 +229,33 @@ class myHandler(BaseHTTPRequestHandler):
                     filesArr = json.loads(filesList)
                     for item in filesArr:
                         root, ext = os.path.splitext(item)
-                        num = str(randint(100000, 1000000))
                         os.replace(rootPath + "/faces/" + root + ext, rootPath + "/faces/" + fileName + '_' + num + ext)
-                    answer += "\"Renamed\",\"Type\":\"info\"}"
+                    answer += "\"Renamed\",\"fileId\":\"camera_" + num + "\",\"Type\":\"info\"}"
+                with open("./config/update/face_" + num, "w+") as f:
+                    f.write("update;:;" + fileName + ";:;" + fileOld)
             except:
                 log.error("".join(traceback.format_stack()))
                 answer += "\"Error update face\",\"Type\":\"danger\"}"
             log.debug(answer)
             self.wfile.write(bytes(answer, "utf8"))
-        elif("/updateCamera" == self.path):
+        elif("/updateCamera/" == self.path):
             answer = "{\"updateCameraResult\":"
-            # Not finished yet!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             try:
-                answer += "\"ok\",\"Type\":\"info\"}"
+                with open("./config/camConfig.json", 'rb+') as fh:
+                    data = fh.read()
+                config = json.loads(data)
+                txtData = form.getvalue('body')
+                newName = form.getvalue('id')
+                newCam = json.loads(txtData)
+                num = str(int(round(time.time() * 100000)))
+                config['cameras'].update(newCam)
+                with open('./config/camConfig.json', 'w+') as f:
+                    json.dump(config, f, ensure_ascii=False)
+                answer += "\"ok\",\"name\":\"" + newName + "\",\"fileId\":\"camera_" + num + "\",\"Type\":\"info\"}"
                 log.debug(answer)
                 self.wfile.write(bytes(answer, "utf8"))
+                with open("./config/update/camera_" + num, "w+") as f:
+                    f.write("update;:;" + newName)
             except:
                 answer += "\"File does not exist.\",\"Type\":\"danger\"}"
                 log.error("".join(traceback.format_stack()))
@@ -249,11 +264,22 @@ class myHandler(BaseHTTPRequestHandler):
             answer = "{\"deleteFacesResult\":"
             try:
                 name = form['name'].value
-                path = rootPath + "/faces/" + name
-                os.remove(path)
-                answer += "\"ok\",\"name\":\"" + name + "\",\"Type\":\"info\"}"
+                listNames = ''
+                print("delFace=", name)
+                for dirname, dirnames, filenames in os.walk('./faces', topdown=False):
+                    for filename in filenames:
+                        nameArr = filename.split('_')
+                        key = nameArr[0] + "_" + nameArr[1]
+                        if(key == name):
+                            print("del=", filename)
+                            os.remove("./faces/" + filename)
+                            listNames += "delete;:;" + filename + "\n"
+                num = str(int(round(time.time() * 100000)))
+                answer += "\"ok\",\"name\":\"" + name + "\",\"fileId\":\"face_" + num + "\",\"Type\":\"info\"}"
                 log.debug(answer)
                 self.wfile.write(bytes(answer, "utf8"))
+                with open("./config/update/face_" + num, "w+") as f:
+                    f.write(listNames)
             except:
                 answer += "\"File does not exist.\",\"Type\":\"danger\"}"
                 log.error("".join(traceback.format_stack()))
@@ -278,11 +304,22 @@ class myHandler(BaseHTTPRequestHandler):
                 self.wfile.write(bytes(answer, "utf8"))
         elif("/deleteCamConfig" == self.path):
             answer = "{\"deleteCamConfigResult\":"
+            # not ready yet
             try:
-                name = form['name'].value
-                answer += "\"ok\",\"name\":\"" + name + "\",\"Type\":\"info\"}"
+                with open("./config/camConfig.json", 'rb+') as fh:
+                    data = fh.read()
+                config = json.loads(data)
+                delName = form.getvalue('body')
+                print("delname=", delName)
+                num = str(int(round(time.time() * 100000)))
+                del config['cameras'][delName]
+                with open('./config/camConfig.json', 'w+') as f:
+                    json.dump(config, f, ensure_ascii=False)
+                answer += "\"ok\",\"name\":\"" + delName + "\",\"fileId\":\"camera_" + num + "\",\"Type\":\"info\"}"
                 log.debug(answer)
                 self.wfile.write(bytes(answer, "utf8"))
+                with open("./config/update/camera_" + num, "w+") as f:
+                    f.write("delete;:;" + delName)
             except:
                 answer += "\"File does not exist.\",\"Type\":\"danger\"}"
                 log.error("".join(traceback.format_stack()))
@@ -295,13 +332,16 @@ class myHandler(BaseHTTPRequestHandler):
                 config = json.loads(data)
                 txtData = form.getvalue('body')
                 newCam = json.loads(txtData)
-                config['cameras'].append(newCam)
-                with open('./config/camConfig.json', 'w') as f:
+                newName = str(randint(1000000, 10000000))
+                num = str(int(round(time.time() * 100000)))
+                config['cameras'].update({newName: newCam})
+                with open('./config/camConfig.json', 'w+') as f:
                     json.dump(config, f, ensure_ascii=False)
-                # print("newJson=", newCam)
-                answer += "\"ok\",\"name\":\"" + newCam["Name"] + "\",\"Type\":\"info\"}"
+                answer += "\"ok\",\"name\":\"" + newName + "\",\"fileId\":\"camera_" + num + "\",\"Type\":\"info\"}"
                 log.debug(answer)
                 self.wfile.write(bytes(answer, "utf8"))
+                with open("./config/update/camera_" + num, "w+") as f:
+                    f.write("new;:;" + newName)
             except:
                 answer += "\"Can not add to cam config.\",\"Type\":\"danger\"}"
                 log.error("".join(traceback.format_stack()))
@@ -545,6 +585,11 @@ class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
 
 if __name__ == '__main__':
     try:
+        listDirs = ['config/', 'config/update/', 'faces/', 'log/', 'log/img/', 'img/', 'forRecognation/', 'resultFaces/']
+        for directory in listDirs:
+            if not os.path.exists(directory):
+                print("create new dir " + directory)
+                os.makedirs(directory)
         server = ThreadedHTTPServer(('localhost', PORT_NUMBER), myHandler)
         server.set_auth(USER_LOGIN, USER_PASS)
         # print('Starting cameras processes')

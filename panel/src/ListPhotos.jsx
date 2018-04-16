@@ -95,13 +95,15 @@ onDelete(e){e.preventDefault();
       response.json().then((body) => {
         console.log("server delete ansver body=",body)
         console.log("server delete ansver",body.deleteFacesResult)
-        let index = this.tableResult.indexOf(body.name)
-        if (index > -1) { this.tableResult.splice(index, 1)}
-        console.log("this.tableResult",this.tableResult)
-        //this.tableResult = body.deleteFacesResult
-        //`${body.geFacesResult}`
-        this.resultTr=true;
-        this.setState({ resultTr: !this.state.resultTr });
+        this.takeTableData()
+        // let index = this.tableResult.indexOf(body.name)
+        //
+        // if (index > -1) { this.tableResult.splice(index, 1)}
+        // console.log("this.tableResult",this.tableResult)
+        // //this.tableResult = body.deleteFacesResult
+        // //`${body.geFacesResult}`
+        // this.resultTr=true;
+        // this.setState({ resultTr: !this.state.resultTr });
       })
     })
   }

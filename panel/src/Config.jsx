@@ -29,7 +29,7 @@ export default class Config extends React.Component {
 
   handleAddCamera(ev){ ev.preventDefault();
     console.log("Upload config")
-    let listConfig = [this.Name,this.IP,this.Resolution,this.Location]
+    let listConfig = [this.Name,this.IP,this.Port,this.Recognation,this.Resolution,this.Location]
     let config = {}
     let tr = ""
     for (let i in listConfig) {
@@ -47,8 +47,9 @@ export default class Config extends React.Component {
         console.log("server ansver0=",response)
         response.json().then((body) => {
           console.log("server ansver",body)
-          this.setState({ result: body.resultUpload});
-          this.setState({alertType:body.Type})
+          this.takeListCameras()
+          // this.setState({ result: body.resultUpload});
+          // this.setState({alertType:body.Type})
           // for (let i in listConfig) {listConfig[i].value = ""}
         });
       })
@@ -75,7 +76,8 @@ export default class Config extends React.Component {
   }
 
   takeListCameras(){
-      fetch('getCamConfig')
+    let str_auth = 'Basic ' + localStorage.getItem('id_token')
+      fetch('getCamConfig/',{headers: new Headers({'Authorization': str_auth})})
       .then(this.handleErrors)
       .then((response) => {
         response.json().then((body) => {
@@ -99,7 +101,7 @@ export default class Config extends React.Component {
 
     showTable(){
       let result =[];
-      console.log("this.resultTr",this.resultTr)
+      console.log("table this.resultTr",this.resultTr)
       if(this.resultTr){
          result = Object.keys(this.tableResult).map((key, i) =>{
           let item = this.tableResult[key]
@@ -109,14 +111,14 @@ export default class Config extends React.Component {
           <tr key={"item_"+i} style={tbStyle}>
             <td style={tbStyle}>{i}</td>
             <td style={tbStyle}>{item["Name"]}</td>
-            <td style={tbStyle}>{key}</td>
+            <td style={tbStyle}>{item["IP"]}</td>
             <td style={tbStyle}>{item["Port"]}</td>
             <td style={tbStyle}>{item["Recognation"]}</td>
             <td style={tbStyle}>{item["Resolution"]}</td>
             <td style={tbStyle}>{item["Location"]}</td>
             <td style={tbStyle}>
               <OverlayTrigger placement="top" overlay={tooltipDelete}>
-                <a href="#"><span id={item} className="glyphicon glyphicon-remove" onClick={this.onDelete.bind(this)}></span></a>
+                <a href="#"><span id={key} className="glyphicon glyphicon-remove" onClick={this.onDelete.bind(this)}></span></a>
               </OverlayTrigger>
               &nbsp;&nbsp;
               <OverlayTrigger placement="top" overlay={tooltipEdit}>
@@ -133,7 +135,7 @@ export default class Config extends React.Component {
     if(e.target){
       console.log('e',e.target.id)
       const data = new FormData();
-      data.append('camera',e.target.id)
+      data.append('body',e.target.id)
       //let data = {"name":'"'+e.target.id+'"'}
       fetch('deleteCamConfig', {
         method: 'POST',
@@ -144,19 +146,21 @@ export default class Config extends React.Component {
         response.json().then((body) => {
           console.log("server delete ansver body=",body)
           console.log("server delete ansver",body.deleteFacesResult)
-          let index = this.tableResult.indexOf(body.name)
-          if (index > -1) { this.tableResult.splice(index, 1)}
-          console.log("this.tableResult",this.tableResult)
+          this.takeListCameras()
+          // let index = this.tableResult.indexOf(body.name)
+          // if (index > -1) { this.tableResult.splice(index, 1)}
+          // console.log("this.tableResult",this.tableResult)
           //this.tableResult = body.deleteFacesResult
           //`${body.geFacesResult}`
-          this.resultTr=true;
-          this.setState({ resultTr: !this.state.resultTr });
+          // this.resultTr=true;
+          // this.setState({ resultTr: !this.state.resultTr });
         })
       })
     }
   }
 
   render() {
+
     let tbStyle = {textAlign:"center",verticalAlign: "middle"}
       return (
         <div>
@@ -176,23 +180,23 @@ export default class Config extends React.Component {
 
               </FormGroup>
             </Form>
-          <Table responsive striped bordered condensed>
-            <thead>
-              <tr style={{textAlign:"center",verticalAlign: "middle"}}>
-                <th>#</th>
-                <th style={tbStyle}>Name</th>
-                <th style={tbStyle}>IP</th>
-                <th style={tbStyle}>Port</th>
-                <th style={tbStyle}>Recognation</th>
-                <th style={tbStyle}>Resolution</th>
-                <th style={tbStyle}>Location</th>
-                <th style={tbStyle}>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {this.showTable()}
-            </tbody>
-          </Table>
+            <Table responsive striped bordered condensed>
+              <thead>
+                <tr style={{textAlign:"center",verticalAlign: "middle"}}>
+                  <th>#</th>
+                  <th style={tbStyle}>Name</th>
+                  <th style={tbStyle}>IP</th>
+                  <th style={tbStyle}>Port</th>
+                  <th style={tbStyle}>Recognation</th>
+                  <th style={tbStyle}>Resolution</th>
+                  <th style={tbStyle}>Location</th>
+                  <th style={tbStyle}>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {this.showTable()}
+              </tbody>
+            </Table>
         </div>
       )}
   }

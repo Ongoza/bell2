@@ -25,7 +25,8 @@ export default class EditFace extends Component {
     let name = this.props.match.params.id.split("_")
     if(name[1]==undefined){name[1]=""}
     this.setState({firstName:name[0],secondName:name[1]})
-    fetch('../getOneFace?'+this.props.match.params.id)
+    let str_auth = 'Basic ' + localStorage.getItem('id_token')
+    fetch('../getOneFace?'+this.props.match.params.id,{headers: new Headers({'Authorization': str_auth})})
         .then(this.handleErrors)
         .then((response) => {
             let jResponse = response.json()

@@ -42,12 +42,12 @@ export default class Login extends React.Component {
     return (
         <Form inline>
           {this.state.resultTr}
-            <FormGroup controlId="formHorizontalEmail">
-                <ControlLabel>Email </ControlLabel>
+            <FormGroup controlId="formControlsText">
+                <ControlLabel>Name&nbsp;</ControlLabel>
                 <FormControl type="username" inputRef={ref => { this.login = ref; }} onChange={this.handleChange} placeholder="Name" />
-            </FormGroup>
+            </FormGroup>&nbsp;&nbsp;
             <FormGroup controlId="formHorizontalPassword">
-                <ControlLabel>Password </ControlLabel>
+                <ControlLabel>Password&nbsp; </ControlLabel>
                 <FormControl type="password" inputRef={ref => { this.pass = ref; }} onChange={this.handleChange} placeholder="Password" />
             </FormGroup>
             <Button onClick={(event) => this.handleSubmit(event)}>Login</Button>

@@ -25,20 +25,22 @@ export default class EditCamera extends Component {
     let name = this.props.match.params.id.split("_")
     if(name[1]==undefined){name[1]=""}
     this.setState({firstName:name[0],secondName:name[1]})
-    fetch('getCamConfig')
+    let str_auth = 'Basic ' + localStorage.getItem('id_token')
+      fetch('getCamConfig/',{headers: new Headers({'Authorization': str_auth})})
     .then(this.handleErrors)
     .then((response) => {
       response.json().then((body) => {
         console.log("getCamConfig.result",body.cameras,this.props.match.params.id)
         this.tableResult = body.cameras
         this.item = body.cameras[this.props.match.params.id]
-        console.log("getCamConfig.result IP=",this.item["Port"])
+        console.log("getCamConfig.result IP=",this.item["IP"])
+        let IP = this.item["IP"]
         let Port = this.item["Port"]
         let Name = this.item["Name"]
         let Recognation = this.item["Recognation"]
         let Resolution = this.item["Resolution"]
         let Location = this.item["Location"]
-        this.setState({ IP: this.props.match.params.id });
+        this.setState({ IP: IP });
         this.setState({ Port: Port});
         this.setState({ Name: Name});
         this.setState({ Recognation: Recognation});
@@ -61,21 +63,21 @@ export default class EditCamera extends Component {
     ev.preventDefault();
     //const form = ev.target;
     console.log("le2n=",this.state.IP)
-    let ip = this.IP.value
-
-    let dataJson ={
+    let id = this.props.match.params.id
+    let dataJson ={}
+    dataJson[id]={
+      "IP":this.IP.value,
       "Port":this.Port.value,
       "Location":this.Location.value,
       "Recognation": this.Recognation.value,
       "Resolution": this.Resolution.value}
       console.log("json=",dataJson)
     let data = new FormData();
-        data.append('IP',this.IP.value );
-        data.append('oldIP',this.props.match.params.id);
-        data.append('Data',JSON.stringify(dataJson));
-        fetch('../updateCamera', {
+        data.append('body',JSON.stringify(dataJson));
+        data.append('id',id);
+        fetch('../updateCamera/', {
           method: 'POST',
-          body: data,
+          body: data
         })
         .then(this.handleErrors)
         .then((response) => {

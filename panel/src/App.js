@@ -78,7 +78,7 @@ export default class App extends Component {
           <Route exact={true} path="/" component={StartInfo}/>
           <Route path="/recognation" component={Recognation}/>
           <Route path="/facesList" component={ListPhotos}/>
-          <Route path="/camerasList" component={ListCameras}/>
+          <Route path="/camerasList/" component={ListCameras}/>
           <Route path="/config" component={Config}/>
           <Route path="/notify" component={Notify}/>
           <Route path="/log" component={Logs}/>
@@ -99,19 +99,14 @@ export default class App extends Component {
   doLogin(){
     console.log("start login",this.Auth )
     if(this.Auth){
-      console.log("to logout")
       localStorage.removeItem('id_token')
       this.Auth = 0
       this.setState({login:"Login"})
-      window.location.reload()
-
-    }else{
-      console.log("to login")
-      history.push("/login")
-      this.setState({login:"Logout"})
-      window.location.reload()
-    }
+    }else{this.setState({login:"Logout"})}
+    history.push("/login")
+    window.location.reload()
   }
+  
   render() {
     //<Camera text="tick=0" ></Camera>
     // <ListPhotos></ListPhotos>

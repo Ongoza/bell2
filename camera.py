@@ -96,7 +96,7 @@ class Camera(threading.Thread):
                                         self.detected_faces[name] = self.delay_before_leave
                                     else:
                                         # new face is detected
-                                        name = "unknown_" + str(random.randint(100000, 1000000)) + "_0"
+                                        name = "unknown_" + self.cameraName + "-" + str(random.randint(100000, 1000000)) + "_0"
                                         # print("start for unknown " + name)
                                         if(len(self.unknown_face_encodings) > 0):
                                             matches_u = face_recognition.compare_faces(self.unknown_face_encodings, face_encoding, 0.6)
@@ -215,11 +215,24 @@ class Camera(threading.Thread):
     def stop(self):
         self.log1.info("stop 1 camera " + self.cameraName)
         self.log2.info("stop 2 camera " + self.cameraName)
+        self._stopevent.set()
         if(self.cap):
             self.cap.release()
-        cv2.destroyAllWindows()
+        # cv2.destroyAllWindows()
         self.alive = False
         self.join()
 
+    def restart(name, url):
+        if(self):
+            self.log1.info("restart 1 camera " + self.cameraName)
+            self.log2.info("restart 2 camera " + self.cameraName)
+            self._stopevent.set()
+            if(self.cap):
+                self.cap.release()
+            # cv2.destroyAllWindows()
+            self.alive = False
+            self.join()
+        return Camera(name, url).start()
 
-Camera("webCamera", 0).start()
+
+# Camera("webCamera", 0).start()

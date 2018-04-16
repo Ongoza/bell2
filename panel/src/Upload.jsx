@@ -45,12 +45,13 @@ export default class Upload extends React.Component {
           console.log("server ansver0=",response)
           response.json().then((body) => {
             console.log("server ansver",body)
-            this.setState({ result: body.resultUpload});
-            this.setState({alertType:body.Type})
-            this.fileUpload.files = null
-            this.fileUpload.value =""
-            this.firstName.value =""
-            this.secondName.value=""
+            window.location.reload()
+            // this.setState({ result: body.resultUpload});
+            // this.setState({alertType:body.Type})
+            // this.fileUpload.files = null
+            // this.fileUpload.value =""
+            // this.firstName.value =""
+            // this.secondName.value=""
           });
         })
         .catch((err)=>{console.log("Error connect to Server") })

@@ -47,7 +47,7 @@ export default class ListCameras extends React.Component {
       if(this.resultTr){
         let result =[];
         result = Object.keys(this.tableResult).map((key, i) =>{
-          console.log("item=",key)
+          console.log("0 item=",key)
           let item = this.tableResult[key]
           let tbStyle = {textAlign:"center",verticalAlign: "middle"}
           let recognation = "glyphicon glyphicon-ban-circle"
@@ -56,13 +56,13 @@ export default class ListCameras extends React.Component {
               <tr key={"item_"+i} style={tbStyle}>
                 <td style={tbStyle}>{i}</td>
                 <td style={tbStyle}>{item["Name"]}</td>
-                <td style={tbStyle}>{key}</td>
+                <td style={tbStyle}>{item["IP"]}</td>
                 <td style={tbStyle}>{item["Location"]}</td>
                   <td style={tbStyle}>
-                    <a href="#"><span id={item["IP"]} name={key} className={recognation} onClick={this.CameraRecognation.bind(this)}></span></a>
+                    <a href="#"><span id={key} className={recognation} onClick={this.CameraRecognation.bind(this)}></span></a>
                   </td>
                 <td style={tbStyle}>
-                  <a href="#"><span id={item["IP"]} name={item["IP"]} className="glyphicon glyphicon-ban-circle" onClick={this.CameraStreaming.bind(this)}></span></a>
+                  <a href="#"><span id={key} className="glyphicon glyphicon-ban-circle" onClick={this.CameraStreaming.bind(this)}></span></a>
                 </td>
                 <td style={tbStyle}>
                     <img id={"stream_0"} ref={"stream_0"} width="128" height="128" src="#"  />
@@ -114,7 +114,7 @@ export default class ListCameras extends React.Component {
         <form>
           <FormGroup inline="true">
             <ControlLabel style={{fontSize: "250%"}}>Cameras&nbsp;&nbsp;</ControlLabel>
-            <LinkContainer to="/config"><Button bsStyle="primary" name ="bt" key ="bt" >Config</Button></LinkContainer>
+            <LinkContainer to="/config"><Button bsStyle="primary" name ="bt" key ="bt" >Edit config</Button></LinkContainer>
           </FormGroup>
         </form>
         <Table responsive striped bordered condensed>

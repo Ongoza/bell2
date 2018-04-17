@@ -34,12 +34,14 @@ export default class ListPhotos extends React.Component {
     fetch('getFaces/',{headers: new Headers({'Authorization': str_auth})})
       .then(this.handleErrors)
       .then((response) => {
+          // console.log("response=",response.text())
           let jResponse = response.json()
           console.log("jResponse=",jResponse)
           jResponse.then((body) => {
+            // console.log("this.body",body.getFacesResult)
             this.tableResult = body.getFacesResult
             this.resultTr=true;
-            console.log("this.resultTr",this.tableResult)
+            // console.log("this.resultTr",this.tableResult)
             this.setState({ resultTr: !this.state.resultTr });
         })
       })

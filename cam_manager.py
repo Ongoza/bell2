@@ -26,12 +26,13 @@ def check_update():
     print("start update")
     list_updated = []
     files = os.listdir("./config/update/")
-    time_files = sorted(files, reverse=True)
+    time_files = sorted(files)
     try:
         for strName in time_files:
             path = "./config/update/" + strName
             log1.info("update config from file=" + path)
             action_type = strName[0: strName.index('_')]
+            tr_cam = False
             try:
                 with open(path, "r") as f:
                     for line in f:
@@ -39,16 +40,19 @@ def check_update():
                         strText = action_type + '_' + actionArr[1]
                         list_updated.append(strText)
                         if(action_type == 'face'):
-
-                            print("start face")
+                            tr_cam = True
                         elif(action_type == 'camera'):
-                            print("start camera")
-                            load_config()
-                            # stop_cam(name, True)
+                            tr_cam = True
                         else:
                             log.error("can not recogize command: " + strName)
-                print("line4=", list_updated)
-        #         # os.remove(path)
+
+                if(tr_cam):
+                    load_config()
+                    print("start camera")
+                    # stop_cam(name, True)
+                    # print("line4=", list_updated)
+                # os.remove(path)
+                os.rename(path, "./config/updated/" + strName)
             except:
                 log1.error("can load file " + strName)
     except:
@@ -112,6 +116,11 @@ try:
     log1.addHandler(fileHandler1)
     log1.addHandler(streamHandler)
     log1.info("start main cam manager")
+    listDirs = ['config/', 'config/update/', 'config/updated/', 'faces/', 'log/', 'log/img/', 'img/', 'forRecognation/', 'resultFaces/']
+    for directory in listDirs:
+        if not os.path.exists(directory):
+            print("create new dir " + directory)
+            os.makedirs(directory)
     # clean update data on start
     # for dirname, dirnames, filenames in os.walk('./config/update/', topdown=False):
     #     for filename in filenames:
@@ -123,10 +132,9 @@ try:
     if 'cameras' in config:
         for cam in config['cameras']:
             start_cam(cam)
-
         check_update()
         while 1:
-            time.sleep(5)
+            time.sleep(60)
             # check_update()
             pass
         # print("main running ", len(threads), threads[0].name)

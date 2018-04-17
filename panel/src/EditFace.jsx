@@ -1,9 +1,13 @@
 import React, { Component } from 'react';
 import {Table, Panel, Tooltip, OverlayTrigger , Label, Button, ButtonGroup, Form, Alert, FormControl, FormGroup, Col, ControlLabel} from 'react-bootstrap';
 import { LinkContainer } from 'react-router-bootstrap';
+import createBrowserHistory from "history/createBrowserHistory"
+
+const history = createBrowserHistory({forceRefresh: true})
 
 const tooltipDelete =(<Tooltip id="tooltipDelete">Delete</Tooltip>);
 const tooltipEdit =(<Tooltip id="tooltipEdit">Edit</Tooltip>);
+
 
 export default class EditFace extends Component {
   constructor(props) {
@@ -29,6 +33,7 @@ export default class EditFace extends Component {
     fetch('../getOneFace?'+this.props.match.params.id,{headers: new Headers({'Authorization': str_auth})})
         .then(this.handleErrors)
         .then((response) => {
+           // console.log("Response=",response.text())
             let jResponse = response.json()
             console.log("jResponse=",jResponse)
             jResponse.then((body) => {
@@ -47,8 +52,7 @@ export default class EditFace extends Component {
       return response;
   }
 
-  handleUpdateFace(ev) {
-    ev.preventDefault();
+  handleUpdateFace(ev) { ev.preventDefault();
     //const form = ev.target;
     console.log("le2n=",this.firstName.value,this.state.firstName,this.secondName.value,this.state.secondName)
     let firstName = this.firstName.value
@@ -76,8 +80,12 @@ export default class EditFace extends Component {
           console.log("server ansver0=",response)
           response.json().then((body) => {
             console.log("server ansver",body)
+            if(body.Type=='info'){
+              history.push("/facesList")
+            }else{
             this.setState({ result: body.resultUpdate});
             this.setState({alertType:body.Type})
+          }
           });
         })
         .catch((err)=>{console.log("Error connect to Server") })
@@ -101,9 +109,10 @@ onDelete(e){e.preventDefault();
 
 }
   showPhotos(){
-    console.log("start show photos")
+    console.log("start show photos",this.tableResult)
     if(this.tableResult){
       return this.tableResult.map((item,i)=>{
+        console.log("img",item,i)
         return(
         <FormGroup>
           <Col componentClass={ControlLabel} sm={2}> </Col>

@@ -2,10 +2,7 @@ import React from 'react';
 import {Table, Nav, Pager, NavItem, Panel, Tooltip, OverlayTrigger , Button, ButtonGroup, Form, Alert, FormControl, FormGroup, Col, ControlLabel} from 'react-bootstrap';
 
 import createBrowserHistory from "history/createBrowserHistory"
-
-const history = createBrowserHistory({
-  forceRefresh: true
-})
+const history = createBrowserHistory({ forceRefresh: true })
 
 export default class Login extends React.Component {
   constructor() {

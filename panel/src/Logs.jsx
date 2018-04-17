@@ -113,7 +113,21 @@ export default class Logs extends React.Component {
     this.takeLogData()
   }
 
+//   showOvelay(){
+//     let ovelayStyle =  {'position': 'fixed', 'display': 'none', 'width': '100%', 'height': '100%', 'top': 0, 'left': 0, 'right': 0, 'bottom': 0, 'backgroundColor': 'rgba(0,0,0,0.5)',
+// 'zIndex': 2, 'cursor': 'pointer', 'display' : "none"}
+//     if(this.trOverlayImg){ ovelayStyle['display']='block' }
+//     return (
+//        <div style = {ovelayStyle} id="overlay" onClick={this.offOver()}>test</div>
+//     )
+//     }
+//
+//   offOver(){
+//     console.log(":show overlay")
+//   }
+
   render() {
+    // {this.showOvelay()}
     return (
       <div>
         {this.state.resultTr}
@@ -134,6 +148,7 @@ export default class Logs extends React.Component {
           <Pager.Item eventKey="last" >{this.totalPages}</Pager.Item>
         </Pager>
         <div key="log_body" ref="log_body" id="log_body"> </div>
+
       </div>
     )}
 }

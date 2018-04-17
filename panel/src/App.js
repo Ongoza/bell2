@@ -23,10 +23,7 @@ import {Table, Nav,Navbar, Pager, NavDropdown,  NavItem, Panel, Tooltip, Overlay
 
 import AuthService from './AuthService'
 import createBrowserHistory from "history/createBrowserHistory"
-
-const history = createBrowserHistory({
-  forceRefresh: true
-})
+const history = createBrowserHistory({forceRefresh: true })
 
 var counter = 0
 var ctx
@@ -106,7 +103,7 @@ export default class App extends Component {
     history.push("/login")
     window.location.reload()
   }
-  
+
   render() {
     //<Camera text="tick=0" ></Camera>
     // <ListPhotos></ListPhotos>

@@ -27,47 +27,48 @@ def check_update():
     list_updated = []
     files = os.listdir("./config/update/")
     time_files = sorted(files)
+    tr_cam = False
     try:
         for strName in time_files:
             path = "./config/update/" + strName
             log1.info("update config from file=" + path)
-            action_type = strName[0: strName.index('_')]
-            tr_cam = False
             try:
-                with open(path, "r") as f:
-                    for line in f:
-                        actionArr = line.rstrip("\n").split(';:;')
-                        strText = action_type + '_' + actionArr[1]
-                        list_updated.append(strText)
-                        if(action_type == 'face'):
-                            tr_cam = True
-                        elif(action_type == 'camera'):
-                            tr_cam = True
-                        else:
-                            log.error("can not recogize command: " + strName)
-
-                if(tr_cam):
-                    load_config()
-                    print("start camera")
-                    # stop_cam(name, True)
+                with open(path, 'r') as fh:
+                    data = fh.read()
+                jsonData = json.loads(data)
+                action_type = jsonData['type']
+                list_updated.append(strName)
+                if(action_type == 'face'):
+                    tr_cam = True
+                elif(action_type == 'camera'):
+                    tr_cam = True
+                else:
+                    log.error("can not recogize command: " + strName)
                     # print("line4=", list_updated)
                 # os.remove(path)
                 os.rename(path, "./config/updated/" + strName)
             except:
-                log1.error("can load file " + strName)
+                log1.error("can not load file " + strName)
     except:
-        log1.error("can load updates ")
+        log1.error("can not load updates ")
+    if(tr_cam):
+        log1.info("Start cameras restarting...")
+        load_config()
+        stop_cam(name, True)
 
 
 def stop_cam(name, restart):
+    # print(" try start stop ", name)
     try:
         if(threads[name]):
             if(restart):
                 threads[name] = threads[name].restart()
+                log1.info("Try restart camera:" + name)
             else:
                 threads[name].stop()
+                threads[name].join()
                 del threads[name]
-            log1.info("was stopped camera:" + name)
+                log1.info("Try stop camera:" + name)
         else:
             print("camera did not start")
             if(restart):
@@ -93,16 +94,24 @@ def load_config():
 
 def start_cam(cam):
     value = config['cameras'][cam]
-    url = cam + value["Port"]
-    if(value["Recognation"].lower() == "true"):
-        log1.info("Try open camera " + url)
-        if(values["Port"] == ""):
-            url = int(cam)
-        name = values["Name"]
-        # c = camera.Camera(name, url)
-        # c.start()
-        # threads[name] = c
-        log1.info("Started camera " + url)
+    try:
+        if(value["Recognation"].lower() == "true"):
+            url = value["IP"] + ':' + value["Port"]
+            log1.info("Try open camera url:" + url)
+            name = value["Name"]
+            cam_id = url
+            if(value["Port"] == '0' or value["Port"] == ''):
+                try:
+                    url = int(value["IP"])
+                except:
+                    log1.error("Error start usb camera:" + name + ' url:' + url)
+            print("usb=", url)
+            c = camera.Camera(name, url)
+            c.start()
+            threads[cam_id] = c
+            log1.info("Try start camera:" + name + ' url:' + str(url))
+    except:
+        log1.error("Error start camera:" + name + ' url:' + str(url))
 
 
 try:
@@ -122,10 +131,10 @@ try:
             print("create new dir " + directory)
             os.makedirs(directory)
     # clean update data on start
-    # for dirname, dirnames, filenames in os.walk('./config/update/', topdown=False):
-    #     for filename in filenames:
-    #         path = "./config/update/" + filename
-    #         os.remove(path)
+    for dirname, dirnames, filenames in os.walk('./config/update/', topdown=False):
+        for filename in filenames:
+            path = "./config/update/" + filename
+            os.remove(path)
     # load config
     load_config()
     # print("config", config)
@@ -144,8 +153,7 @@ try:
 except KeyboardInterrupt:
     size = len(threads) - 1
     log1.info("\n Stopping active cameras: " + str(size + 1))
-    for name, cameraObj in threads:
-        print("stoping=", x)
-        print("kill=", name)
-        stop_cam(name, False)
+    for key in list(threads.keys()):
+        # print("stoping=", key)
+        stop_cam(key, False)
     log1.info("End keyboard stop main cam manager")

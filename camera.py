@@ -15,6 +15,7 @@ class Camera(threading.Thread):
         self.log1 = logging.getLogger('Camera_' + self.cameraName)
         self.url = url
         self.cap = 0
+        self.errors_before_stop = 8
         self.delay_before_add = 2  # number of frames with face before add
         self.delay_before_leave = 5  # number of frames with face before leave
         # self.ramp_frames = 20
@@ -47,7 +48,7 @@ class Camera(threading.Thread):
         self.log2.setLevel("DEBUG")
         self.log2.addHandler(fileHandler2)
         self.log2.addHandler(streamHandler)
-
+        errors_before_stop = self.errors_before_stop
         location_faces = os.path.join(self.location, "faces/")
         count = 0
         count_err = 0
@@ -75,6 +76,7 @@ class Camera(threading.Thread):
                     else:
                         counter = self.start_counter
                         ret, frame_sm = self.cap.read()
+                        # print("counter 2 ", ret)
                         if(ret):
                             # frame_sm = cv2.resize(frame, (0, 0), fx=0.5, fy=0.5)
                             face_locations = face_recognition.face_locations(frame_sm)
@@ -205,12 +207,19 @@ class Camera(threading.Thread):
                                     print("clear unknown", self.detected_faces_new, self.unknown_face_names, self.unknown_face_encodings)
                             # cv2.imshow(self.cameraName, frame_sm)
                         else:
-                            self.log1.error("can not connect ot camera")
+                            errors_before_stop -= 1
+                            print("Error. Can not take frame from camera: " + self.cameraName)
+                            if (errors_before_stop < 0):
+                                self.log1.error("Can not take frame from camera: " + self.cameraName)
+                                self.stop()
+
                 except:  # Exception as e
-                    print("stop camera ".join(traceback.format_stack()))
+                    print("Can not try connect to camera ".join(traceback.format_stack()))
+                    self.log1.error("Can not try connect to camera: " + self.cameraName)
+                    self.stop()
                     # self.stop()
         else:
-            self.log1.error("no connected cameras")
+            self.log1.error("Can not open connection to camera: " + self.cameraName)
 
     def stop(self):
         self.log1.info("stop 1 camera " + self.cameraName)
@@ -220,7 +229,7 @@ class Camera(threading.Thread):
             self.cap.release()
         # cv2.destroyAllWindows()
         self.alive = False
-        self.join()
+        # self.join()
 
     def restart(name, url):
         if(self):
@@ -231,8 +240,8 @@ class Camera(threading.Thread):
                 self.cap.release()
             # cv2.destroyAllWindows()
             self.alive = False
-            self.join()
-        return Camera(name, url).start()
+            # self.join()
+        # return Camera(name, url).start()
 
 
 # Camera("webCamera", 0).start()

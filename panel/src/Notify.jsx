@@ -28,17 +28,20 @@ export default class Notify extends React.Component {
   }
 
   takeTableData(){
-      fetch('../config/notify.json')
+    let str_auth = 'Basic ' + localStorage.getItem('id_token')
+    fetch('getAlerts/',{headers: new Headers({'Authorization': str_auth})})
+      // fetch('../config/alerts.json')
       .then(this.handleErrors)
       .then((response) => {
         // console.log("Response=",response)
           let jResponse = response.json()
           // console.log("jResponse=",jResponse)
           jResponse.then((body) => {
-            // console.log("body",body)
-            // this.tableResult = body.geFacesResult
-            // this.resultTr=true;
-            this.config_body = body
+            console.log("body",body)
+            this.tableResult = body.alerts
+            this.resultTr=true;
+            this.setState({ resultTr: !this.state.resultTr });
+            // this.config_body = body
 
 
             this.setState({ resultTr: !this.state.resultTr });
@@ -75,14 +78,64 @@ export default class Notify extends React.Component {
       )
     }
   }
+    showAlerts(){
+       if(this.resultTr){
+         let result =[];
+         result = Object.keys(this.tableResult).map((key, i) =>{
+           console.log("0 item=",key)
+           let item = this.tableResult[key]
+           let tbStyle = {textAlign:"center",verticalAlign: "middle"}
+           let recognation = "glyphicon glyphicon-ban-circle"
+           if(item['Recognation']=='true'){recognation = "glyphicon glyphicon-ok-circle"}
+             return(
+               <tr key={"item_"+i} style={tbStyle}>
+                 <td style={tbStyle}>{i}</td>
+                 <td style={tbStyle}>{item["Name"]}</td>
+                 <td style={tbStyle}>{item["IP"]}</td>
+                 <td style={tbStyle}>{item["Location"]}</td>
+                   <td style={tbStyle}>
+                     <a href="#"><span id={key} className={recognation} onClick={this.CameraRecognation.bind(this)}></span></a>
+                   </td>
+                 <td style={tbStyle}>
+                   <a href="#"><span id={key} className="glyphicon glyphicon-ban-circle" onClick={this.CameraStreaming.bind(this)}></span></a>
+                 </td>
+                 <td style={tbStyle}>
+                     <img id={"stream_0"} ref={"stream_0"} width="128" height="128" src="#"  />
+               </td>
+               </tr>
+             )})
+        this.resultTr=false;
+        return result
+      }else{
+        return(<tr><td colSpan="7">Wait while connect to server</td></tr>)
+      }
+    }
 
   render() {
     return (
       <div>
-        {this.state.resultTr}
-        <h3>Notifaction config</h3>
-        <div key="config_body" ref="config_body" id="config_body"></div>
-        {this.showForm()}
-      </div>
+        <form>
+          <FormGroup inline="true">
+            <ControlLabel style={{fontSize: "250%"}}>Alerts&nbsp;&nbsp;</ControlLabel>
+            <LinkContainer to="/alerts/"><Button bsStyle="primary" name ="bt" key ="bt" >Edit Alerts</Button></LinkContainer>
+          </FormGroup>
+        </form>
+        <Table responsive striped bordered condensed>
+          <thead>
+            <tr style={{textAlign:"center",verticalAlign: "middle"}}>
+              <th>#</th>
+              <th style={{textAlign:"center",verticalAlign: "middle"}}>User name</th>
+              <th style={{textAlign:"center",verticalAlign: "middle"}}>Email</th>
+              <th style={{textAlign:"center",verticalAlign: "middle"}}>Phone</th>
+              <th style={{textAlign:"center",verticalAlign: "middle"}}>Type</th>
+              <th style={{textAlign:"center",verticalAlign: "middle"}}>Events</th>
+              <th style={{textAlign:"center",verticalAlign: "middle"}}>Text</th>
+            </tr>
+          </thead>
+          <tbody>
+        {this.showAlerts()}
+      </tbody>
+    </Table>
+    </div>
     )}
 }

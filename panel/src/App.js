@@ -19,9 +19,11 @@ import Notify from './Notify'
 import StartInfo from './StartInfo'
 import EditFace from './EditFace'
 import EditCamera from './EditCamera'
+import EditAlert from './EditAlert'
+import Alerts from './Alerts'
 import {Table, Nav,Navbar, Pager, NavDropdown,  NavItem, Panel, Tooltip, OverlayTrigger , Button, ButtonGroup, Form, Alert, FormControl, FormGroup, Col, ControlLabel} from 'react-bootstrap';
 
-import AuthService from './AuthService'
+// import AuthService from './AuthService'
 import createBrowserHistory from "history/createBrowserHistory"
 const history = createBrowserHistory({forceRefresh: true })
 
@@ -78,9 +80,11 @@ export default class App extends Component {
           <Route path="/camerasList/" component={ListCameras}/>
           <Route path="/config" component={Config}/>
           <Route path="/notify" component={Notify}/>
+          <Route path="/alerts" component={Alerts}/>
           <Route path="/log" component={Logs}/>
           <Route path="/editFace/:id" component={EditFace}/>
           <Route path="/editCamera/:id" component={EditCamera}/>
+          <Route path="/editAlert/:id" component={EditAlert}/>
         </div>
       )
     }
@@ -121,7 +125,7 @@ export default class App extends Component {
               <LinkContainer to="/recognation"><NavItem eventKey={1}  href="#">Recognation</NavItem></LinkContainer>
               <LinkContainer to="/facesList"><NavItem eventKey={2} href="#">Faces</NavItem></LinkContainer>
               <LinkContainer to="/camerasList"><NavItem eventKey={3} href="#">Cameras</NavItem></LinkContainer>
-
+              <LinkContainer to="/notify"><NavItem eventKey={4} href="#">Alerts</NavItem></LinkContainer>
               <LinkContainer to="/log"><NavItem eventKey={5} href="#">Log</NavItem></LinkContainer>
             </Nav>
             <Nav pullRight>

@@ -251,6 +251,35 @@ class myHandler(BaseHTTPRequestHandler):
                 # answer += "\"Error update face\",\"Type\":\"danger\"}"
             log.debug(answer)
             self.wfile.write(bytes(json.dumps(answer), "utf8"))
+        elif("/addAlerts/" == self.path):
+            # answer = "{\"updateAlertsResult\":"
+            answer = {}
+            num = str(int(round(time.time() * 100000)))
+            fileIdStr = "alert_" + num
+            try:
+                txtData = form.getvalue('body')
+                newName = str(randint(1000000, 10000000))
+                newData = json.loads(txtData)
+                print("newData=", newData)
+                with open("./config/alerts.json", 'r') as fh:
+                    data = fh.read()
+                print("config=", data)
+                config = json.loads(data)
+                config['alerts'].update({newName: newData})
+                print("config=", config)
+                os.rename('./config/alerts.json', './config/alerts.json.backup_' + num)
+                with open('./config/alerts.json', 'w+') as f:
+                    json.dump(config, f, ensure_ascii=False)
+                answer.update({"updateAlertsResult": "ok", "name": newName, "fileId": fileIdStr, "Type": "info"})
+                log.debug(answer)
+                with open("./config/update/alert_" + num, "w+") as f2:
+                    newTxt = {'type': 'alert', 'update': [newName]}
+                    json.dump(newTxt, f2, ensure_ascii=False)
+                    # f.write("update;:;" + newName)
+            except:
+                answer.update({"updateAlertsResult": "Error update alerts.json", "fileId": fileIdStr, "Type": "danger"})
+                log.error("".join(traceback.format_stack()))
+            self.wfile.write(bytes(json.dumps(answer), "utf8"))
         elif("/updateCamera/" == self.path):
             answer = "{\"updateCameraResult\":"
             try:
@@ -261,6 +290,7 @@ class myHandler(BaseHTTPRequestHandler):
                 newName = form.getvalue('id')
                 newCam = json.loads(txtData)
                 num = str(int(round(time.time() * 100000)))
+                os.rename('./config/camConfig.json', './config/camConfig.json.backup_' + num)
                 config['cameras'].update(newCam)
                 with open('./config/camConfig.json', 'w+') as f:
                     json.dump(config, f, ensure_ascii=False)
@@ -329,6 +359,7 @@ class myHandler(BaseHTTPRequestHandler):
                 delName = form.getvalue('body')
                 print("delname=", delName)
                 num = str(int(round(time.time() * 100000)))
+                os.rename('./config/camConfig.json', './config/camConfig.json.backup_' + num)
                 del config['cameras'][delName]
                 with open('./config/camConfig.json', 'w+') as f:
                     json.dump(config, f, ensure_ascii=False)
@@ -353,6 +384,7 @@ class myHandler(BaseHTTPRequestHandler):
                 newCam = json.loads(txtData)
                 newName = str(randint(1000000, 10000000))
                 num = str(int(round(time.time() * 100000)))
+                os.rename('./config/camConfig.json', './config/camConfig.json.backup_' + num)
                 config['cameras'].update({newName: newCam})
                 with open('./config/camConfig.json', 'w+') as f:
                     json.dump(config, f, ensure_ascii=False)
@@ -510,7 +542,20 @@ class myHandler(BaseHTTPRequestHandler):
                     self.wfile.write(data)
                 except:
                     log.error("".join(traceback.format_stack()))
-                    self.wfile.write(bytes("{\"success\":\"Error open img\"}", "utf8"))
+                    self.wfile.write(bytes("{\"success\":\"Error open config\"}", "utf8"))
+            elif("/getAlerts/" in path):
+                print("!!!!/ getAlerts /")
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                data = 0
+                try:
+                    with open("./config/alerts.json", 'rb') as fh:
+                        data = fh.read()
+                except:
+                    log.error("".join(traceback.format_stack()))
+                    data = bytes("{\"success\":\"Error open alert config\"}", "utf8")
+                print("getAlertData=", data)
+                self.wfile.write(data)
             elif("/getOneFace" == path):  # deleteFace
                 query = parsed_path.query
                 print("query=", query)

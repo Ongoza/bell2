@@ -15,6 +15,7 @@ class Camera(threading.Thread):
         self.log1 = logging.getLogger('Camera_' + self.cameraName)
         self.url = url
         self.cap = 0
+        self.isActive = False
         self.errors_before_stop = 8
         self.delay_before_add = 2  # number of frames with face before add
         self.delay_before_leave = 5  # number of frames with face before leave
@@ -69,6 +70,7 @@ class Camera(threading.Thread):
         self.cap = cv2.VideoCapture(self.url)
         if(self.cap.isOpened()):
             self.log2.info("started camera " + str(self.url))
+            self.isActive = True
             while not self._stopevent.isSet():
                 try:
                     if(counter > 0):
@@ -225,23 +227,13 @@ class Camera(threading.Thread):
         self.log1.info("stop 1 camera " + self.cameraName)
         self.log2.info("stop 2 camera " + self.cameraName)
         self._stopevent.set()
+        self.isActive = False
         if(self.cap):
             self.cap.release()
         # cv2.destroyAllWindows()
         self.alive = False
         # self.join()
-
-    def restart(name, url):
-        if(self):
-            self.log1.info("restart 1 camera " + self.cameraName)
-            self.log2.info("restart 2 camera " + self.cameraName)
-            self._stopevent.set()
-            if(self.cap):
-                self.cap.release()
-            # cv2.destroyAllWindows()
-            self.alive = False
-            # self.join()
-        # return Camera(name, url).start()
+    # return Camera(name, url).start()
 
 
 # Camera("webCamera", 0).start()

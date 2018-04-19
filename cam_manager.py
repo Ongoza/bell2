@@ -114,6 +114,17 @@ def start_cam(cam):
         log1.error("Error start camera:" + name + ' url:' + str(url))
 
 
+def check_active_cams():
+    # print("Tik cam")
+    for key in list(threads.keys()):
+        # print("check=", key, threads[key])
+        if(threads[key]):
+            if(not threads[key].isActive):
+                log1.info("try restart cam: ", threads[key].url)
+                threads[key].start()
+                # stop_cam(key, False)
+
+
 try:
     formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
     streamHandler = logging.StreamHandler()
@@ -143,9 +154,11 @@ try:
             start_cam(cam)
         check_update()
         while 1:
+            # print("Tik 0")
             time.sleep(60)
-            # check_update()
-            pass
+            check_update()
+            check_active_cams()
+            # pass
         # print("main running ", len(threads), threads[0].name)
     else:
         log1.error("can not open config file ")

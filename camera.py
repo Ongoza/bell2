@@ -8,13 +8,21 @@ import face_recognition
 import logging
 import sys
 
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.application import MIMEApplication
+from email.mime.multipart import MIMEMultipart
+
 
 class Camera(threading.Thread):
-    def __init__(self, name, url):
+    def __init__(self, name, url, addresses):
         self.cameraName = name
         self.log1 = logging.getLogger('Camera_' + self.cameraName)
         self.url = url
         self.cap = 0
+        self.fromaddr = 'oleg2231710@gmail.com'
+        self.toaddr = addresses
+        self.password = 'z'
         self.isActive = False
         self.errors_before_stop = 8
         self.delay_before_add = 2  # number of frames with face before add
@@ -97,6 +105,7 @@ class Camera(threading.Thread):
                                         if(not name in self.detected_faces):
                                             self.log2.info("Detect face " + name)
                                             saveImgPath = "log/img/" + name + ".png"
+                                            self.sendMsgAlert("Detect person: " + name, "")
                                         self.detected_faces[name] = self.delay_before_leave
                                     else:
                                         # new face is detected
@@ -122,6 +131,7 @@ class Camera(threading.Thread):
                                                     self.detected_faces[name] = self.delay_before_leave
                                                     self.known_face_names.append(name)
                                                     self.known_face_encodings.append(face_encoding)
+                                                    self.sendMsgAlert("Detected new face", saveImgPath)
                                                     self.log2.info("Done add new face " + name)
                                             else:
                                                 self.unknown_face_encodings.append(face_encoding)
@@ -178,6 +188,7 @@ class Camera(threading.Thread):
                                 for i in del_names:
                                     del self.detected_faces[i]
                                     self.log2.info("Leave know face: " + i)
+                                    # self.sendMsgAlert("Leave person: " + name,'')
                                 del_names2 = []
                                 for key2, value2 in self.detected_faces_new.items():
                                     if (not key2 in face_names):
@@ -235,5 +246,35 @@ class Camera(threading.Thread):
         # self.join()
     # return Camera(name, url).start()
 
+    def sendMsgAlert(text, img_path):
+        print("start try send email")
+        if self.toaddr:
+            try:
+                msg = MIMEMultipart()
+                msg['Subject'] = 'Test'
+                # me == the sender's email address
+                # family = the list of all recipients' email addresses
+                msg['From'] = ', '.join(fromaddr)
+                msg['To'] = ', '.join(toaddr)
+                msg.preamble = 'Multipart massage.\n'
+                part = MIMEText(text)
+                msg.attach(part)
+                # with open("img/Oleg_Sylver_0.png", 'rb') as fp:
+                #     img_data = fp.read()
+                if(img_path != ""):
+                    with open(img_path, 'rb') as fp:
+                        img_data = fp.read()
+                    part = MIMEApplication(img_data)
+                    part.add_header('Content-Disposition', 'attachment', filename="Photo.png")
+                    msg.attach(part)
+                # print("send mail 1")
+                # Send the email via our own SMTP server.
+                with smtplib.SMTP_SSL('smtp.gmail.com:465') as s:
+                    s.ehlo()
+                    s.login(fromaddr, password)
+                    s.send_message(msg)
+                    print("send mail")
+            except:
+                print("Error: unable to send email")
 
 # Camera("webCamera", 0).start()

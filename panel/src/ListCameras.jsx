@@ -114,7 +114,9 @@ export default class ListCameras extends React.Component {
         <form>
           <FormGroup inline="true">
             <ControlLabel style={{fontSize: "250%"}}>Cameras&nbsp;&nbsp;</ControlLabel>
+
             <LinkContainer to="/config"><Button bsStyle="primary" name ="bt" key ="bt" >Edit config</Button></LinkContainer>
+            
           </FormGroup>
         </form>
         <Table responsive striped bordered condensed>

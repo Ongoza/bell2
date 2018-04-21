@@ -251,29 +251,33 @@ class myHandler(BaseHTTPRequestHandler):
                 # answer += "\"Error update face\",\"Type\":\"danger\"}"
             log.debug(answer)
             self.wfile.write(bytes(json.dumps(answer), "utf8"))
-        elif("/addAlerts/" == self.path):
-            # answer = "{\"updateAlertsResult\":"
+        elif("/updateAlert/" == self.path):
+            # print("/updateAlert/")
             answer = {}
             num = str(int(round(time.time() * 100000)))
             fileIdStr = "alert_" + num
             try:
                 txtData = form.getvalue('body')
-                newName = str(randint(1000000, 10000000))
-                newData = json.loads(txtData)
-                print("newData=", newData)
+                idData = form.getvalue('id')
+                actData = form.getvalue('action')
+                newName = idData
+                if(newName == "new"):
+                    newName = num
                 with open("./config/alerts.json", 'r') as fh:
                     data = fh.read()
-                print("config=", data)
                 config = json.loads(data)
-                config['alerts'].update({newName: newData})
-                print("config=", config)
-                os.rename('./config/alerts.json', './config/alerts.json.backup_' + num)
+                if(actData == 'delete'):
+                    del config['alerts'][newName]
+                else:
+                    newData = json.loads(txtData)
+                    config['alerts'].update({newName: newData})
+                os.rename('./config/alerts.json', './config/backup/alerts.json.' + num)
                 with open('./config/alerts.json', 'w+') as f:
                     json.dump(config, f, ensure_ascii=False)
                 answer.update({"updateAlertsResult": "ok", "name": newName, "fileId": fileIdStr, "Type": "info"})
                 log.debug(answer)
                 with open("./config/update/alert_" + num, "w+") as f2:
-                    newTxt = {'type': 'alert', 'update': [newName]}
+                    newTxt = {'type': 'alert', 'update': [newName], 'action': [actData]}
                     json.dump(newTxt, f2, ensure_ascii=False)
                     # f.write("update;:;" + newName)
             except:
@@ -290,7 +294,7 @@ class myHandler(BaseHTTPRequestHandler):
                 newName = form.getvalue('id')
                 newCam = json.loads(txtData)
                 num = str(int(round(time.time() * 100000)))
-                os.rename('./config/camConfig.json', './config/camConfig.json.backup_' + num)
+                os.rename('./config/camConfig.json', './config/backup/camConfig.json.' + num)
                 config['cameras'].update(newCam)
                 with open('./config/camConfig.json', 'w+') as f:
                     json.dump(config, f, ensure_ascii=False)
@@ -359,7 +363,7 @@ class myHandler(BaseHTTPRequestHandler):
                 delName = form.getvalue('body')
                 print("delname=", delName)
                 num = str(int(round(time.time() * 100000)))
-                os.rename('./config/camConfig.json', './config/camConfig.json.backup_' + num)
+                os.rename('./config/camConfig.json', './config/backup/camConfig.json.' + num)
                 del config['cameras'][delName]
                 with open('./config/camConfig.json', 'w+') as f:
                     json.dump(config, f, ensure_ascii=False)
@@ -384,7 +388,7 @@ class myHandler(BaseHTTPRequestHandler):
                 newCam = json.loads(txtData)
                 newName = str(randint(1000000, 10000000))
                 num = str(int(round(time.time() * 100000)))
-                os.rename('./config/camConfig.json', './config/camConfig.json.backup_' + num)
+                os.rename('./config/camConfig.json', './config/backup/camConfig.json.' + num)
                 config['cameras'].update({newName: newCam})
                 with open('./config/camConfig.json', 'w+') as f:
                     json.dump(config, f, ensure_ascii=False)
@@ -544,7 +548,7 @@ class myHandler(BaseHTTPRequestHandler):
                     log.error("".join(traceback.format_stack()))
                     self.wfile.write(bytes("{\"success\":\"Error open config\"}", "utf8"))
             elif("/getAlerts/" in path):
-                print("!!!!/ getAlerts /")
+                # print("!!!!/ getAlerts /")
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
                 data = 0
@@ -554,7 +558,7 @@ class myHandler(BaseHTTPRequestHandler):
                 except:
                     log.error("".join(traceback.format_stack()))
                     data = bytes("{\"success\":\"Error open alert config\"}", "utf8")
-                print("getAlertData=", data)
+                # print("getAlertData=", data)
                 self.wfile.write(data)
             elif("/getOneFace" == path):  # deleteFace
                 query = parsed_path.query
@@ -655,7 +659,8 @@ class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
 
 if __name__ == '__main__':
     try:
-        listDirs = ['config/', 'config/update/', 'config/updated/', 'faces/', 'log/', 'log/img/', 'img/', 'forRecognation/', 'resultFaces/']
+        listDirs = ['config/', 'config/update/', 'config/backup/', 'config/updated/',
+                    'faces/', 'log/', 'log/img/', 'img/', 'forRecognation/', 'resultFaces/']
         for directory in listDirs:
             if not os.path.exists(directory):
                 print("create new dir " + directory)

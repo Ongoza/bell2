@@ -168,7 +168,11 @@ export default class Config extends React.Component {
             <Form horizontal name ="form" key ="form" >
               <FormGroup>
               <Col sm={3}><ControlLabel style={{fontSize: "200%"}}>Cameras list</ControlLabel> </Col>
-              <Col sm={2}><Button bsStyle="primary" onClick={this.handleAddCamera} name ="bt" key ="bt" >Add new camera</Button></Col>
+              <Col sm={4}>
+                <ButtonGroup>
+                  <LinkContainer to="/camerasList"><Button bsStyle="primary" name ="btBack" key ="btBack" >Back</Button></LinkContainer>
+                <Button bsStyle="primary" onClick={this.handleAddCamera} name ="bt" key ="bt" >Add new camera</Button>
+              </ButtonGroup></Col>
               </FormGroup>
               <FormGroup>
                 <Col sm={2}><FormControl name ="Name" key ="Name"  inputRef={ref => { this.Name = ref; }}  type="text" placeholder="Name" /></Col>

@@ -56,55 +56,25 @@ export default class Notify extends React.Component {
 
   }
 
-  showForm(){
-    if(this.config_body){
-      let items = Object.keys(this.config_body).map((key)=>{
-        return (
-          <FormGroup>
-          <Col componentClass={ControlLabel} sm={2}> {key} </Col>
-            <Col sm={5}>
-              <FormControl name ="files" key ="files" label="File"  inputRef={ref => { this.fileUpload = ref; }} type="text" value={this.config_body[key]} />
-            </Col>
-          </FormGroup>
-        )
-      })
-      return(
-        <div id = "configId" key ="configId" >
-          <Form horizontal name ="form" key ="form" >
-            {items}
-          </Form>
-          <Button bsStyle="primary" onClick={this.handleUpdateConfig} name ="bt" key ="bt" >Update</Button>
-        </div>
-      )
-    }
-  }
     showAlerts(){
        if(this.resultTr){
          let result =[];
+         // console.log("0 table=",this.tableResult)
          result = Object.keys(this.tableResult).map((key, i) =>{
-           console.log("0 item=",key)
            let item = this.tableResult[key]
            let tbStyle = {textAlign:"center",verticalAlign: "middle"}
-           let recognation = "glyphicon glyphicon-ban-circle"
-           if(item['Recognation']=='true'){recognation = "glyphicon glyphicon-ok-circle"}
              return(
                <tr key={"item_"+i} style={tbStyle}>
                  <td style={tbStyle}>{i}</td>
-                 <td style={tbStyle}>{item["Name"]}</td>
-                 <td style={tbStyle}>{item["IP"]}</td>
-                 <td style={tbStyle}>{item["Location"]}</td>
-                   <td style={tbStyle}>
-                     <a href="#"><span id={key} className={recognation} onClick={this.CameraRecognation.bind(this)}></span></a>
-                   </td>
-                 <td style={tbStyle}>
-                   <a href="#"><span id={key} className="glyphicon glyphicon-ban-circle" onClick={this.CameraStreaming.bind(this)}></span></a>
-                 </td>
-                 <td style={tbStyle}>
-                     <img id={"stream_0"} ref={"stream_0"} width="128" height="128" src="#"  />
-               </td>
+                 <td style={tbStyle}>{item['Name']}</td>
+                 <td style={tbStyle}>{item["Email"]}</td>
+                 <td style={tbStyle}>{item["Phone"]}</td>
+                 <td style={tbStyle}>{item["Type"]}</td>
+                 <td style={tbStyle}>{item["Events"]}</td>
+                 <td style={tbStyle}>{item["Text"]}</td>
                </tr>
              )})
-        this.resultTr=false;
+        // this.resultTr=false;
         return result
       }else{
         return(<tr><td colSpan="7">Wait while connect to server</td></tr>)

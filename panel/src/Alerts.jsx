@@ -17,7 +17,7 @@ export default class Alerts extends React.Component {
       Email:"",
       Phone:"",
       Events:"",
-      Type:"",
+      Type:"None",
       Text:""
     }
 this.handleAddAlert = this.handleAddAlert.bind(this);
@@ -47,7 +47,9 @@ this.handleAddAlert = this.handleAddAlert.bind(this);
       console.log("Upload config",config)
       const data = new FormData();
       data.append('body', JSON.stringify(config));
-      fetch('../addAlerts/', { method: 'POST', body: data})
+      data.append('action','add')
+      data.append('id',"new");
+      fetch('../updateAlert/', { method: 'POST', body: data})
       .then(this.handleErrors)
       .then((response) => {
         console.log("server ansver0=",response)
@@ -120,7 +122,7 @@ this.handleAddAlert = this.handleAddAlert.bind(this);
               </OverlayTrigger>
               &nbsp;&nbsp;
               <OverlayTrigger placement="top" overlay={tooltipEdit}>
-                <LinkContainer to={"/ediAlert/"+key}><a href="#"><span id={key} className="glyphicon glyphicon-edit" ></span></a></LinkContainer>
+                <LinkContainer to={"/editAlert/"+key}><a href="#"><span id={key} className="glyphicon glyphicon-edit" ></span></a></LinkContainer>
               </OverlayTrigger>
             </td>
           </tr>)})
@@ -133,18 +135,18 @@ this.handleAddAlert = this.handleAddAlert.bind(this);
     if(e.target){
       console.log('e',e.target.id)
       const data = new FormData();
-      data.append('body',e.target.id)
+      data.append('id',e.target.id)
+      data.append('action','delete')
+      data.append('body', '{}');
+
       //let data = {"name":'"'+e.target.id+'"'}
-      fetch('deleteCamConfig', {
-        method: 'POST',
-        body: data
-      })
+      fetch('../updateAlert/', { method: 'POST', body: data})
       .then((response) => {
         console.log("server  delete ansver0=",response,"==")
         response.json().then((body) => {
           console.log("server delete ansver body=",body)
-          console.log("server delete ansver",body.deleteFacesResult)
-          this.takeListCameras()
+          console.log("server delete ansver",body.updateAlertsResult)
+          this.takeListAlerts()
           // let index = this.tableResult.indexOf(body.name)
           // if (index > -1) { this.tableResult.splice(index, 1)}
           // console.log("this.tableResult",this.tableResult)
@@ -157,19 +159,24 @@ this.handleAddAlert = this.handleAddAlert.bind(this);
     }
   }
   onChange(e){e.preventDefault();
+    console.log("e.target.value",e.target.value,e.target.name)
     this.setState({[e.target.name]:e.target.value})
+    this.resultTr = true
   }
 
   render() {
     let tbStyle = {textAlign:"center",verticalAlign: "middle"}
-
+      console.log("render")
       return (
         <div>
           {this.state.resultTr}
             <Form horizontal name ="form" key ="form" >
               <FormGroup>
-              <Col sm={3}><ControlLabel style={{fontSize: "200%"}}>Cameras list</ControlLabel> </Col>
-              <Col sm={2}><Button bsStyle="primary" onClick={this.handleAddAlert} name ="bt" key ="bt" >Add new alert</Button></Col>
+              <Col sm={3}><ControlLabel style={{fontSize: "200%"}}>Alerts list</ControlLabel> </Col>
+                <ButtonGroup>
+                  <LinkContainer to="/notify"><Button bsStyle="primary" name ="btBack" key ="btBack" >Back</Button></LinkContainer>
+              <Button bsStyle="primary" onClick={this.handleAddAlert} name ="bt" key ="bt" >Add new alert</Button>
+              </ButtonGroup>
               </FormGroup>
               <FormGroup>
                 <Col sm={12}>
@@ -181,9 +188,19 @@ this.handleAddAlert = this.handleAddAlert.bind(this);
                   <Col sm={2}><FormControl name ="Phone" key ="Phone"  inputRef={ref => { this.Phone = ref; }} onChange={this.onChange.bind(this)}  type="text" value={this.state.Phone} /></Col>
                 </Col><Col sm={12}>
                 <Col componentClass={ControlLabel} sm={1}> Type: </Col>
-                  <Col sm={2}><FormControl name ="Type" key ="Type"  inputRef={ref => { this.Type = ref; }} onChange={this.onChange.bind(this)}  type="text" value={this.state.Type} /></Col>
+                  <Col sm={2}>
+                      <FormControl name ="Type" key ="Type"  componentClass="select" onChange={this.onChange.bind(this)} inputRef={ref => { this.Type = ref; }} placeholder="None" >
+                        <option value="none">None</option>
+                        <option value="email">Email</option>
+                      </FormControl>
+                  </Col>
                     <Col componentClass={ControlLabel} sm={1}> Events: </Col>
-                    <Col sm={2}><FormControl name ="Events" key ="Events"  inputRef={ref => { this.Events = ref; }} onChange={this.onChange.bind(this)}  type="text" value={this.state.Events} /></Col>
+                    <Col sm={2}>
+                      <FormControl name ="Events" key ="Events"  componentClass="select"  inputRef={ref => { this.Events = ref; }} onChange={this.onChange.bind(this)}  placeholder="None" >
+                          <option value="none">None</option>
+                            <option value="detectFaces">detectFaces</option>
+                        </FormControl>
+                    </Col>
                     <Col componentClass={ControlLabel} sm={1}> Text: </Col>
                     <Col sm={3}><FormControl name ="Text" key ="Text"  inputRef={ref => { this.Text = ref; }} onChange={this.onChange.bind(this)}  type="text" value={this.state.Text} /></Col>
                 </Col>

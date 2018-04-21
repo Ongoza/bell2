@@ -23,7 +23,7 @@ export default class EditAlert extends Component {
   componentDidMount() {
     // let str = this.props.match.params.id.replace(/\.[^/.]+$/, "")
     console.log("getAlerts.id==")
-    let name = this.props.match.params.id.split("_")
+    let name = this.props.match.params.id
     if(name[1]==undefined){name[1]=""}
     this.setState({firstName:name[0],secondName:name[1]})
     let str_auth = 'Basic ' + localStorage.getItem('id_token')
@@ -49,7 +49,7 @@ export default class EditAlert extends Component {
         this.setState({ Text: Text});
         this.setState({ Events: Events});
         this.resultTr=true;
-        console.log("this.resultTr",this.resultTr)
+        console.log("this.resultTr",this.resultTr, this.state.Events)
         this.setState({ resultTr: !this.state.resultTr });
       })
     })
@@ -67,8 +67,8 @@ export default class EditAlert extends Component {
     console.log("le2n=",this.state.Name)
     let id = this.props.match.params.id
     let dataJson ={}
-    dataJson[id]={
-      "Name":this.name.value,
+    dataJson={
+      "Name":this.Name.value,
       "Email":this.Email.value,
       "Phone":this.Phone.value,
       "Type": this.Type.value,
@@ -77,9 +77,10 @@ export default class EditAlert extends Component {
     }
       console.log("json=",dataJson)
     let data = new FormData();
-        data.append('body',JSON.stringify(dataJson));
+        data.append('body',JSON.stringify(dataJson))
+        data.append('action','update')
         data.append('id',id);
-        fetch('../updateAlerts/', {
+        fetch('../updateAlert/', {
           method: 'POST',
           body: data
         })
@@ -98,7 +99,9 @@ export default class EditAlert extends Component {
   }
 
   onChange(e){e.preventDefault();
+    console.log("e.target.value",e.target.value,e.target.name)
     this.setState({[e.target.name]:e.target.value})
+    this.resultTr = true
   }
 
   showResult(){
@@ -130,7 +133,7 @@ onDelete(e){e.preventDefault();
                 <Col componentClass={ControlLabel} sm={1}> Camera </Col>
                 <Col sm={8}>
                   <ButtonGroup>
-                    <LinkContainer to="/config"><Button bsStyle="primary" name ="btBack" key ="btBack" >Back</Button></LinkContainer>
+                    <LinkContainer to="/alerts"><Button bsStyle="primary" name ="btBack" key ="btBack" >Back</Button></LinkContainer>
                     <Button bsStyle="primary" onClick={this.handleUpdateAlert.bind(this)} name ="btUpdate" key ="bt" >Update</Button>
                   </ButtonGroup>
               </Col></Col>
@@ -138,18 +141,30 @@ onDelete(e){e.preventDefault();
             <FormGroup>
               <Col sm={12}>
                 <Col componentClass={ControlLabel} sm={1}> Name: </Col>
-                  <Col sm={3}><FormControl name ="Name" key ="Name"  inputRef={ref => { this.Name = ref; }} onChange={this.onChange.bind(this)}  type="text" value={this.state.IP} />
+                  <Col sm={3}><FormControl name ="Name" key ="Name"  inputRef={ref => { this.Name = ref; }} onChange={this.onChange.bind(this)}  type="text" value={this.state.Name} />
                   </Col>
               <Col componentClass={ControlLabel} sm={1}> Email: </Col>
-                <Col sm={2}><FormControl name ="Email" key ="Email"  inputRef={ref => { this.Email = ref; }} onChange={this.onChange.bind(this)}  type="text" value={this.state.Port} /></Col>
+                <Col sm={3}><FormControl name ="Email" key ="Email"  inputRef={ref => { this.Email = ref; }} onChange={this.onChange.bind(this)}  type="text" value={this.state.Email} /></Col>
                 <Col componentClass={ControlLabel} sm={1}> Phone: </Col>
-                <Col sm={2}><FormControl name ="Phone" key ="Phone"  inputRef={ref => { this.Phone = ref; }} onChange={this.onChange.bind(this)}  type="text" value={this.state.Resolution} /></Col>
+                <Col sm={3}><FormControl name ="Phone" key ="Phone"  inputRef={ref => { this.Phone = ref; }} onChange={this.onChange.bind(this)}  type="text" value={this.state.Phone} /></Col>
+
+                </Col><Col sm={12}>
                 <Col componentClass={ControlLabel} sm={1}> Type: </Col>
-                <Col sm={2}><FormControl name ="Type" key ="Type"  inputRef={ref => { this.Type = ref; }} onChange={this.onChange.bind(this)}  type="text" value={this.state.Location} /></Col>
+                <Col sm={2}>
+                  <FormControl name ="Type" value={this.state.Type} key ="Type" componentClass="select" onChange={this.onChange.bind(this)} inputRef={ref => { this.Type = ref; }}  >
+                    <option value="none">None</option>
+                    <option value="email">Email</option>
+                  </FormControl>
+              </Col>
                   <Col componentClass={ControlLabel} sm={1}> Events: </Col>
-                  <Col sm={2}><FormControl name ="Events" key ="Events"  inputRef={ref => { this.Events = ref; }} onChange={this.onChange.bind(this)}  type="text" value={this.state.Name} /></Col>
+                  <Col sm={2}>
+                    <FormControl name ="Events" key ="Events" value={this.state.Events} componentClass="select"  inputRef={ref => { this.Events = ref; }} onChange={this.onChange.bind(this)}  >
+                        <option value="none">None</option>
+                        <option value="detectFaces">detectFaces</option>
+                      </FormControl>
+                  </Col>
                   <Col componentClass={ControlLabel} sm={1}> Text: </Col>
-                  <Col sm={2}><FormControl name ="Text" key ="Text"  inputRef={ref => { this.Text = ref; }} onChange={this.onChange.bind(this)}  type="text" value={this.state.Recognation} /></Col>
+                  <Col sm={3}><FormControl name ="Text" key ="Text"  inputRef={ref => { this.Text = ref; }} onChange={this.onChange.bind(this)}  type="text" value={this.state.Text} /></Col>
 
               </Col>
             </FormGroup>

@@ -5,8 +5,55 @@ import logging
 import json
 import camera
 
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.application import MIMEApplication
+from email.mime.multipart import MIMEMultipart
+
+
+# import subprocess
 threads = {}
 config = {}
+addresses = []
+
+
+# fromaddr = 'oleg223171@gmail.com'
+# toaddr = ['oleg@ongoza.com']
+# password = 'z'
+
+
+# def sendMsgAlert(text, img_path):
+#     print("start send email")
+#     try:
+#         msg = MIMEMultipart()
+#         msg['Subject'] = 'Test'
+#         # me == the sender's email address
+#         # family = the list of all recipients' email addresses
+#         msg['From'] = ', '.join(fromaddr)
+#         msg['To'] = ', '.join(toaddr)
+#         msg.preamble = 'Multipart massage.\n'
+#         part = MIMEText(text)
+#         msg.attach(part)
+#         if(img_path != ""):
+#             with open(img_path, 'rb') as fp:
+#               img_data = fp.read()
+#             part = MIMEApplication(img_data)
+#             part.add_header('Content-Disposition', 'attachment', filename="Photo.png")
+#             msg.attach(part)
+#         # print("send mail 1")
+#         # Send the email via our own SMTP server.
+#         with smtplib.SMTP_SSL('smtp.gmail.com:465') as s:
+#             s.ehlo()
+#             s.login(fromaddr, password)
+#             s.send_message(msg)
+#             print("send mail")
+#     except:
+#         print("Error: unable to send email")
+
+
+# img_data = "img/Oleg_Sylver_0.png"
+# img_data = ""
+# sendMsgAlert("text ggggg", img_data)
 
 
 class ServiceExit(Exception):
@@ -28,6 +75,7 @@ def check_update():
     files = os.listdir("./config/update/")
     time_files = sorted(files)
     tr_cam = False
+    tr_alert = False
     try:
         for strName in time_files:
             path = "./config/update/" + strName
@@ -42,6 +90,8 @@ def check_update():
                     tr_cam = True
                 elif(action_type == 'camera'):
                     tr_cam = True
+                elif(action_type == 'alert'):
+                    tr_alert = True
                 else:
                     log.error("can not recogize command: " + strName)
                     # print("line4=", list_updated)
@@ -55,6 +105,12 @@ def check_update():
         log1.info("Start cameras restarting...")
         load_config()
         stop_cam(name, True)
+    if(tr_alert):
+        print("start alert update")
+        load_alarms()
+        for key, item in threads.items():
+            print("start alert update for cam ", key)
+            item.toaddr = addresses
 
 
 def stop_cam(name, restart):
@@ -79,15 +135,32 @@ def stop_cam(name, restart):
         log1.error("can not stop camera " + name)
 
 
+def load_alarms():
+    global addresses
+    # print("start open config file")
+    try:
+        filename = os.path.dirname(os.path.abspath(__file__)) + "/config/alerts.json"
+        with open(filename, 'r') as fh:
+            data = fh.read()
+        alarms = json.loads(data)
+        for key, item in alarms['alerts'].items():
+            if (item['Type'] == 'email'):
+                if not item['Email'] in addresses:
+                    addresses.append(item['Email'])
+        log1.info("Successful load config file.", config, alerts)
+    except:
+        log1.error("Can not load alarms file.")
+
+
 def load_config():
     global config
-    print("start open config file")
-    filename = os.path.dirname(os.path.abspath(__file__)) + "/config/camConfig.json"
+    # print("start open config file")
     try:
+        filename = os.path.dirname(os.path.abspath(__file__)) + "/config/camConfig.json"
         with open(filename, 'r') as fh:
             data = fh.read()
         config = json.loads(data)
-        log1.info("Successful load config file.")
+        # log1.info("Successful load config file.", config, alerts)
     except:
         log1.error("Can not load config file.")
 
@@ -106,7 +179,7 @@ def start_cam(cam):
                 except:
                     log1.error("Error start usb camera:" + name + ' url:' + url)
             print("usb=", url)
-            c = camera.Camera(name, url)
+            c = camera.Camera(name, url, addresses)
             c.start()
             threads[cam_id] = c
             log1.info("Try start camera:" + name + ' url:' + str(url))
@@ -116,12 +189,12 @@ def start_cam(cam):
 
 def check_active_cams():
     # print("Tik cam")
-    for key in list(threads.keys()):
+    for key, item in threads.items():
         # print("check=", key, threads[key])
-        if(threads[key]):
-            if(not threads[key].isActive):
-                log1.info("try restart cam: ", threads[key].url)
-                threads[key].start()
+        if(item):
+            if(not item.isActive):
+                log1.info("try restart cam: ", item.url)
+                item.start()
                 # stop_cam(key, False)
 
 
@@ -147,6 +220,7 @@ try:
             path = "./config/update/" + filename
             os.remove(path)
     # load config
+    load_alarms()
     load_config()
     # print("config", config)
     if 'cameras' in config:

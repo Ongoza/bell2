@@ -410,7 +410,7 @@ class myHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         key = self.server.get_auth_key()
-        print("auth=", self.headers.get('Authorization'))
+        # print("auth=", self.headers.get('Authorization'))
         self.send_response(200)
         parsed_path = urlparse(self.path)
         path = parsed_path.path
@@ -422,6 +422,7 @@ class myHandler(BaseHTTPRequestHandler):
         elif("/log/img/" in path):
             showImg(self)
         elif("/img/" in path):
+            print("show img " + path)
             showImg(self)
         elif("/login/" in path):
             self.send_header('Content-type', 'application/json')

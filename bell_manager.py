@@ -10,12 +10,12 @@ from email.mime.text import MIMEText
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 
+import bellServer
 
 # import subprocess
 threads = {}
 config = {}
 addresses = []
-
 
 # fromaddr = 'oleg223171@gmail.com'
 # toaddr = ['oleg@ongoza.com']
@@ -208,49 +208,65 @@ def check_active_cams():
                 # stop_cam(key, False)
 
 
-try:
-    formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
-    streamHandler = logging.StreamHandler()
-    streamHandler.setFormatter(formatter)
-    log1 = logging.getLogger('Cam_manager')
-    fileHandler1 = logging.FileHandler('log/camera_manager.log', mode='a+')
-    fileHandler1.setFormatter(formatter)
-    log1.setLevel("DEBUG")
-    log1.addHandler(fileHandler1)
-    log1.addHandler(streamHandler)
-    log1.info("start main cam manager")
-    listDirs = ['config/', 'config/update/', 'config/updated/', 'faces/', 'log/', 'log/img/', 'img/', 'forRecognation/', 'resultFaces/']
-    for directory in listDirs:
-        if not os.path.exists(directory):
-            print("create new dir " + directory)
-            os.makedirs(directory)
-    # clean update data on start
-    for dirname, dirnames, filenames in os.walk('./config/update/', topdown=False):
-        for filename in filenames:
-            path = "./config/update/" + filename
-            os.remove(path)
-    # load config
-    load_alarms()
-    load_config()
-    # print("config", config)
-    if 'cameras' in config:
-        for cam in config['cameras']:
-            start_cam(cam)
-        check_update()
-        while 1:
-            # print("Tik 0")
-            time.sleep(60)
-            check_update()
-            check_active_cams()
-            # pass
-        # print("main running ", len(threads), threads[0].name)
-    else:
-        log1.error("can not open config file ")
+if __name__ == '__main__':
+    try:
+        print("starting web server 2")
+        web_server = ThreadedHTTPServer(('localhost', 8080), myHandler)
+        print("starting web server 3")
+        web_server.set_auth("demo", "demo")
+        print("starting web server 4")
 
-except KeyboardInterrupt:
-    size = len(threads) - 1
-    log1.info("\n Stopping active cameras: " + str(size + 1))
-    for key in list(threads.keys()):
-        # print("stoping=", key)
-        stop_cam(key, False)
-    log1.info("End keyboard stop main cam manager")
+        # print('Starting cameras processes')
+        # p = Process(target=camera_detection, args=('bob',))
+        # p.start()
+        # cameras.append(p)
+        # p.join()
+        web_server.serve_forever()
+        formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+        streamHandler = logging.StreamHandler()
+        streamHandler.setFormatter(formatter)
+        log1 = logging.getLogger('Cam_manager')
+        fileHandler1 = logging.FileHandler('log/camera_manager.log', mode='a+')
+        fileHandler1.setFormatter(formatter)
+        log1.setLevel("DEBUG")
+        log1.addHandler(fileHandler1)
+        log1.addHandler(streamHandler)
+        log1.info("start main cam manager")
+        listDirs = ['config/', 'config/update/', 'config/backup/', 'config/updated/',
+                    'faces/', 'log/', 'log/img/', 'img/', 'forRecognation/', 'resultFaces/']
+        for directory in listDirs:
+            if not os.path.exists(directory):
+                print("create new dir " + directory)
+                os.makedirs(directory)
+        # clean update data on start
+        for dirname, dirnames, filenames in os.walk('./config/update/', topdown=False):
+            for filename in filenames:
+                path = "./config/update/" + filename
+                os.remove(path)
+        # load config
+        load_alarms()
+        load_config()
+        start_server()
+        # print("config", config)
+        if 'cameras' in config:
+            for cam in config['cameras']:
+                start_cam(cam)
+            check_update()
+            while 1:
+                # print("Tik 0")
+                time.sleep(60)
+                check_update()
+                check_active_cams()
+                # pass
+            # print("main running ", len(threads), threads[0].name)
+        else:
+            log1.error("can not open config file ")
+
+    except KeyboardInterrupt:
+        size = len(threads) - 1
+        log1.info("\n Stopping active cameras: " + str(size + 1))
+        for key in list(threads.keys()):
+            # print("stoping=", key)
+            stop_cam(key, False)
+        web_server.socket.close()
+        log1.info("End keyboard stop main cam manager")

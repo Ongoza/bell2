@@ -25,7 +25,7 @@ import base64
 # the browser
 
 
-class myHandler(BaseHTTPRequestHandler):
+class BellHandler(BaseHTTPRequestHandler):
     def camera_detection(self, name):
         print("start camera ", name)
 
@@ -629,12 +629,12 @@ class myHandler(BaseHTTPRequestHandler):
             return
 
 
-class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
+class BellHTTPServer(ThreadingMixIn, HTTPServer):
     """Handle requests in a separate thread."""
     key = ''
     log = ''
 
-    def __init__(self, address, handlerClass=myHandler):
+    def __init__(self, address, handlerClass=BellHandler):
         super().__init__(address, handlerClass)
         self.address = address
 
@@ -661,7 +661,7 @@ class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
 # if __name__ == '__main__':
 #     try:
 #         print("starting web server 2")
-#         server = ThreadedHTTPServer(('localhost', 8080), myHandler)
+#         server = BellHTTPServer(('localhost', 8080), BellHandler)
 #         print("starting web server 3")
 #         server.set_auth("demo", "demo")
 #         print("starting web server 4")

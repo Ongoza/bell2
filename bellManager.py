@@ -10,12 +10,22 @@ from email.mime.text import MIMEText
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 
-import bellServer
+from bellServer import BellHandler, BellHTTPServer
 
 # import subprocess
 threads = {}
 config = {}
 addresses = []
+formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+streamHandler = logging.StreamHandler()
+streamHandler.setFormatter(formatter)
+log1 = logging.getLogger('Cam_manager')
+fileHandler1 = logging.FileHandler('log/camera_manager.log', mode='a+')
+fileHandler1.setFormatter(formatter)
+log1.setLevel("DEBUG")
+log1.addHandler(fileHandler1)
+log1.addHandler(streamHandler)
+log1.info("start main cam manager")
 
 # fromaddr = 'oleg223171@gmail.com'
 # toaddr = ['oleg@ongoza.com']
@@ -210,28 +220,18 @@ def check_active_cams():
 
 if __name__ == '__main__':
     try:
-        print("starting web server 2")
-        web_server = ThreadedHTTPServer(('localhost', 8080), myHandler)
-        print("starting web server 3")
+        web_server = BellHTTPServer(('localhost', 8080), BellHandler)
         web_server.set_auth("demo", "demo")
-        print("starting web server 4")
-
         # print('Starting cameras processes')
         # p = Process(target=camera_detection, args=('bob',))
         # p.start()
         # cameras.append(p)
         # p.join()
-        web_server.serve_forever()
-        formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
-        streamHandler = logging.StreamHandler()
-        streamHandler.setFormatter(formatter)
-        log1 = logging.getLogger('Cam_manager')
-        fileHandler1 = logging.FileHandler('log/camera_manager.log', mode='a+')
-        fileHandler1.setFormatter(formatter)
-        log1.setLevel("DEBUG")
-        log1.addHandler(fileHandler1)
-        log1.addHandler(streamHandler)
-        log1.info("start main cam manager")
+        # web_server.serve_forever()
+        thread = threading.Thread(target=web_server.serve_forever)
+        thread.daemon = True
+        thread.start()
+        print("!!!!!!!!!!!!")
         listDirs = ['config/', 'config/update/', 'config/backup/', 'config/updated/',
                     'faces/', 'log/', 'log/img/', 'img/', 'forRecognation/', 'resultFaces/']
         for directory in listDirs:
@@ -246,7 +246,6 @@ if __name__ == '__main__':
         # load config
         load_alarms()
         load_config()
-        start_server()
         # print("config", config)
         if 'cameras' in config:
             for cam in config['cameras']:

@@ -14,8 +14,12 @@ export default class EditCamera extends Component {
       IP:"0",
       Name:"0",
       Port:"0",
+      camURL: "",
+      Login: "",
+      Password: "",
       Recognation:"0",
       Resolution:"0",
+      Skip:"",
       Location:"0"
     }
   }
@@ -36,16 +40,24 @@ export default class EditCamera extends Component {
         console.log("getCamConfig.result IP=",this.item["IP"])
         let IP = this.item["IP"]
         let Port = this.item["Port"]
+        let camURL = this.item["camURL"]
+        let Login = this.item["Login"]
+        let Password = this.item["Password"]
         let Name = this.item["Name"]
         let Recognation = this.item["Recognation"]
         let Resolution = this.item["Resolution"]
         let Location = this.item["Location"]
+        let Skip = this.item["Skip"]
         this.setState({ IP: IP });
         this.setState({ Port: Port});
         this.setState({ Name: Name});
+        this.setState({ camURL: camURL});
+        this.setState({ Login: Login});
+        this.setState({ Password: Password});
         this.setState({ Recognation: Recognation});
         this.setState({ Resolution: Resolution});
         this.setState({ Location: Location});
+        this.setState({ Skip:Skip});
         this.resultTr=true;
         console.log("this.resultTr",this.resultTr)
         this.setState({ resultTr: !this.state.resultTr });
@@ -66,11 +78,16 @@ export default class EditCamera extends Component {
     let id = this.props.match.params.id
     let dataJson ={}
     dataJson[id]={
+      "Location":this.Location.value,
       "IP":this.IP.value,
       "Port":this.Port.value,
-      "Location":this.Location.value,
+      "camURL":this.camURL.value,
+      "Login":this.Login.value,
+      "Password":this.Password.value,
       "Recognation": this.Recognation.value,
-      "Resolution": this.Resolution.value}
+      "Resolution": this.Resolution.value,
+      "Skip": this.Skip.value,
+    }
       console.log("json=",dataJson)
     let data = new FormData();
         data.append('body',JSON.stringify(dataJson));
@@ -140,15 +157,23 @@ onDelete(e){e.preventDefault();
               </Col>
             </FormGroup>
             <FormGroup>
-              <Col sm={12}>
+              <Col sm={20}>
+                <Col componentClass={ControlLabel} sm={1}> Location: </Col>
+                <Col sm={2}><FormControl name ="Location" key ="Location"  inputRef={ref => { this.Location = ref; }} onChange={this.onChange.bind(this)}  type="text" value={this.state.Location} /></Col>
                 <Col componentClass={ControlLabel} sm={1}> Name: </Col>
                 <Col sm={2}><FormControl name ="Name" key ="Name"  inputRef={ref => { this.Name = ref; }} onChange={this.onChange.bind(this)}  type="text" value={this.state.Name} /></Col>
                 <Col componentClass={ControlLabel} sm={1}> Recognation: </Col>
                 <Col sm={2}><FormControl name ="Recognation" key ="Recognation"  inputRef={ref => { this.Recognation = ref; }} onChange={this.onChange.bind(this)}  type="text" value={this.state.Recognation} /></Col>
+                <Col componentClass={ControlLabel} sm={1}> URL: </Col>
+                <Col sm={2}><FormControl name ="camURL" key ="camURL"  inputRef={ref => { this.camURL = ref; }} onChange={this.onChange.bind(this)}  type="text" value={this.state.camURL} /></Col>
+                <Col componentClass={ControlLabel} sm={1}> Login: </Col>
+                <Col sm={2}><FormControl name ="Login" key ="Login"  inputRef={ref => { this.Login = ref; }} onChange={this.onChange.bind(this)}  type="text" value={this.state.Login} /></Col>
+                <Col componentClass={ControlLabel} sm={1}> Password: </Col>
+                <Col sm={2}><FormControl name ="Password" key ="Password"  inputRef={ref => { this.Password = ref; }} onChange={this.onChange.bind(this)}  type="text" value={this.state.Password} /></Col>
                 <Col componentClass={ControlLabel} sm={1}> Resolution: </Col>
                 <Col sm={2}><FormControl name ="Resolution" key ="Resolution"  inputRef={ref => { this.Resolution = ref; }} onChange={this.onChange.bind(this)}  type="text" value={this.state.Resolution} /></Col>
-                <Col componentClass={ControlLabel} sm={1}> Location: </Col>
-                <Col sm={2}><FormControl name ="Location" key ="Location"  inputRef={ref => { this.Location = ref; }} onChange={this.onChange.bind(this)}  type="text" value={this.state.Location} /></Col>
+                <Col componentClass={ControlLabel} sm={1}> Skip frames: </Col>
+                <Col sm={2}><FormControl name ="Skip" key ="Skip"  inputRef={ref => { this.Skip = ref; }} onChange={this.onChange.bind(this)}  type="text" value={this.state.Skip} /></Col>
               </Col>
             </FormGroup>
           </Form>

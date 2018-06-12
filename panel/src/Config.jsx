@@ -29,7 +29,7 @@ export default class Config extends React.Component {
 
   handleAddCamera(ev){ ev.preventDefault();
     console.log("Upload config")
-    let listConfig = [this.Name,this.IP,this.Port,this.Recognation,this.Resolution,this.Location]
+    let listConfig = [this.Location, this.Name,this.IP,this.Port,this.camURL,this.Login,this.Password,this.Recognation,this.Resolution, this.Skip]
     let config = {}
     let tr = ""
     for (let i in listConfig) {
@@ -110,12 +110,16 @@ export default class Config extends React.Component {
         return (
           <tr key={"item_"+i} style={tbStyle}>
             <td style={tbStyle}>{i}</td>
+            <td style={tbStyle}>{item["Location"]}</td>
             <td style={tbStyle}>{item["Name"]}</td>
+            <td style={tbStyle}>{item["Recognation"]}</td>
             <td style={tbStyle}>{item["IP"]}</td>
             <td style={tbStyle}>{item["Port"]}</td>
-            <td style={tbStyle}>{item["Recognation"]}</td>
+            <td style={tbStyle}>{item["URL"]}</td>
+            <td style={tbStyle}>{item["Login"]}</td>
+            <td style={tbStyle}>{item["Password"]}</td>
             <td style={tbStyle}>{item["Resolution"]}</td>
-            <td style={tbStyle}>{item["Location"]}</td>
+            <td style={tbStyle}>{item["Skip"]}</td>
             <td style={tbStyle}>
               <OverlayTrigger placement="top" overlay={tooltipDelete}>
                 <a href="#"><span id={key} className="glyphicon glyphicon-remove" onClick={this.onDelete.bind(this)}></span></a>
@@ -161,6 +165,7 @@ export default class Config extends React.Component {
 
   render() {
 
+
     let tbStyle = {textAlign:"center",verticalAlign: "middle"}
       return (
         <div>
@@ -175,26 +180,33 @@ export default class Config extends React.Component {
               </ButtonGroup></Col>
               </FormGroup>
               <FormGroup>
+                <Col sm={2}><FormControl name ="Location" key ="Location"  inputRef={ref => { this.Location = ref; }}  type="text" placeholder="Location" /></Col>
                 <Col sm={2}><FormControl name ="Name" key ="Name"  inputRef={ref => { this.Name = ref; }}  type="text" placeholder="Name" /></Col>
+                <Col sm={2}><FormControl name ="Recognation" key ="Recognation"  inputRef={ref => { this.Recognation = ref; }}  type="text" placeholder="Recognation" /></Col>
                 <Col sm={2}><FormControl name ="IP" key ="IP"  inputRef={ref => { this.IP = ref; }}  type="text" placeholder="IP" /></Col>
                 <Col sm={2}><FormControl name ="Port" key ="Port"  inputRef={ref => { this.Port = ref; }}  type="text" placeholder="Port" /></Col>
-                <Col sm={2}><FormControl name ="Recognation" key ="Recognation"  inputRef={ref => { this.Recognation = ref; }}  type="text" placeholder="Recognation" /></Col>
+                <Col sm={2}><FormControl name ="camURL" key ="camURL"  inputRef={ref => { this.camURL = ref; }}  type="text" placeholder="URL" /></Col>
+                <Col sm={2}><FormControl name ="Login" key ="Login"  inputRef={ref => { this.Login = ref; }}  type="text" placeholder="Login" /></Col>
+                <Col sm={2}><FormControl name ="Password" key ="Password"  inputRef={ref => { this.Password = ref; }}  type="text" placeholder="Password" /></Col>
                 <Col sm={2}><FormControl name ="Resolution" key ="Resolution"  inputRef={ref => { this.Resolution = ref; }}  type="text" placeholder="Resolution" /></Col>
-                <Col sm={2}><FormControl name ="Location" key ="Location"  inputRef={ref => { this.Location = ref; }}  type="text" placeholder="Location" /></Col>
-
+                <Col sm={2}><FormControl name ="Skip" key ="Skip"  inputRef={ref => { this.Skip = ref; }}  type="text" placeholder="Skip frames" /></Col>
               </FormGroup>
             </Form>
             <Table responsive striped bordered condensed>
               <thead>
                 <tr style={{textAlign:"center",verticalAlign: "middle"}}>
                   <th>#</th>
+                  <th style={tbStyle}>Location</th>
                   <th style={tbStyle}>Name</th>
+                  <th style={tbStyle}>Recognation</th>
                   <th style={tbStyle}>IP</th>
                   <th style={tbStyle}>Port</th>
-                  <th style={tbStyle}>Recognation</th>
+                  <th style={tbStyle}>URL</th>
+                  <th style={tbStyle}>Login</th>
+                  <th style={tbStyle}>Password</th>
                   <th style={tbStyle}>Resolution</th>
-                  <th style={tbStyle}>Location</th>
-                  <th style={tbStyle}>Action</th>
+                  <th style={tbStyle}>Skip frames</th>
+                  <th style={tbStyle}>Actions</th>
                 </tr>
               </thead>
               <tbody>

@@ -168,17 +168,27 @@ def load_config():
 def start_cam(cam):
     value = config['cameras'][cam]
     try:
+        # log1.info("config " + str(value))
         if(value["Recognation"].lower() == "true"):
-            url = value["IP"] + ':' + value["Port"]
+            url = 'rtsp://'
+            if "Login" in value:
+                login = value["Login"].replace(" ", "")
+                if(login != ''):
+                    url += login + ":" + value["Password"] + "@"
+            url += value["IP"] + ':' + value["Port"]
+            if "camURL" in value:
+                camURL = value["camURL"].replace(" ", "")
+                if(camURL != ''):
+                    url += "/" + value["camURL"]
             log1.info("Try open camera url:" + url)
-            name = value["Name"]
+            name = value["Location"] + "_" + value["Name"]
             cam_id = url
             if(value["Port"] == '0' or value["Port"] == ''):
                 try:
                     url = int(value["IP"])
+                    print("usb=", url)
                 except:
                     log1.error("Error start usb camera:" + name + ' url:' + url)
-            print("usb=", url)
             c = camera.Camera(name, url, addresses)
             c.start()
             threads[cam_id] = c

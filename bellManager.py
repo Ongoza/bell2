@@ -3,13 +3,12 @@ import time
 import os
 import logging
 import json
-import camera
-
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 
+from bellCamera import BellCamera
 from bellServer import BellHandler, BellHTTPServer
 
 # import subprocess
@@ -199,7 +198,7 @@ def start_cam(cam):
                     print("usb=", url)
                 except:
                     log1.error("Error start usb camera:" + name + ' url:' + url)
-            c = camera.Camera(name, url, addresses)
+            c = BellCamera(name, url, addresses)
             c.start()
             threads[cam_id] = c
             log1.info("Try start camera:" + name + ' url:' + str(url))

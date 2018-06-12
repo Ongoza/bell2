@@ -7,6 +7,7 @@ while True:
     try:
         response = self.conn.getresponse().read()
         print(response)
-    except:
+    except KeyboardInterrupt:
+
         os.system("python3 server.py")
         os.system("python3 cam_manager.py")

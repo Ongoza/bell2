@@ -15,7 +15,7 @@ from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 
 
-class Camera(threading.Thread):
+class BellCamera(threading.Thread):
     def __init__(self, name, url, addresses):
         self.cameraName = name
         self.log1 = logging.getLogger('Camera_' + self.cameraName)
@@ -59,8 +59,6 @@ class Camera(threading.Thread):
         threading.Thread.__init__(self)
 
     def run(self):
-        # self.unknown_face_imgs = []
-        # self.detected_faces_unknown = {}
         # print("run1", time.time() - self.startTime)
         self.loadFaces()
         self.startCamera()
@@ -71,14 +69,9 @@ class Camera(threading.Thread):
         counter = self.start_counter
         self.log1.info("start camera " + str(self.url))
         self.cap = cv2.VideoCapture(self.url)
-        # self.cap.set(cv2.CAP_PROP_FPS, 15)
-        # print("get fps=", cv2.CAP_PROP_FPS)
-        # CV_CAP_PROP_FRAME_COUNT
-        # CAP_PROP_FRAME_COUNT
         if(self.cap.isOpened()):
             self.log2.info("started camera " + str(self.url))
             self.isActive = True
-            self.startTime = time.time()
             while not self._stopevent.isSet():
                 try:
                     # if(True):
@@ -86,6 +79,7 @@ class Camera(threading.Thread):
                         counter -= 1
                         time.sleep(0.1)
                     else:
+                        self.startTime = time.time()
                         self.frameCounter += 1
                         # print("camera 1", self.frameCounter, time.time() - self.startTime)
                         # print("get=", self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -136,11 +130,12 @@ class Camera(threading.Thread):
         # picName = 'log/img/testCam_' + str(int(round(time.time() * 100000))) + ".jpeg"
         # cv2.imwrite(picName, frame_sm)
         # print("show cam 1 ", picName)
-        # print("frame 00", self.frameCounter, time.time() - self.startTime)
+        # self.log1.info("frame 00 " + str(self.frameCounter) + " " + str(time.time() - self.startTime))
         # face_locations = face_recognition.face_locations(frame_sm)
         face_locations = self.haar_face_cascade.detectMultiScale(frame_sm, scaleFactor=1.1, minNeighbors=5)
-        # print("frame 01", self.frameCounter, time.time() - self.startTime)
+        # self.log1.info("frame 01 " + str(self.frameCounter) + " " + str(time.time() - self.startTime))
         face_encodings = face_recognition.face_encodings(frame_sm, face_locations)
+        # self.log1.info("frame 03 " + str(self.frameCounter) + " " + str(time.time() - self.startTime))
         face_names = []
         # print("faces:", len(face_locations))
         # print("frame 1", time.time() - self.startTime)
@@ -155,7 +150,7 @@ class Camera(threading.Thread):
                 if True in matches:
                     first_match_index = matches.index(True)
                     name = self.known_face_names[first_match_index]
-                    print("detect person " + name)
+                    # self.log1.info("detect person " + name)
                     # print("frame 3", time.time() - self.startTime)
                     if(not name in self.detected_faces):
                         self.log2.info("Detect face " + name)
@@ -169,7 +164,7 @@ class Camera(threading.Thread):
                     # new face is detected
                     # print("frame 4", time.time() - self.startTime)
                     name = "unknown_" + self.cameraName + "-" + str(random.randint(100000, 1000000)) + "_0"
-                    # print("start for unknown " + name)
+                    # self.log1.info("start for unknown " + name)
                     if(len(self.unknown_face_encodings) > 0):
                         matches_u = face_recognition.compare_faces(self.unknown_face_encodings, face_encoding, 0.7)
                         if True in matches_u:
@@ -236,13 +231,6 @@ class Camera(threading.Thread):
                         self.log2.info("Saved new image " + saveImgPath + " <img src=\"" + saveImgPath + "\"/>")
                     else:
                         self.log1.error("Error create file with face " + saveImgPath)
-            # Draw a label with a name below the face
-
-            # cv2.rectangle(frame_sm, (left, top), (right, bottom), (0, 0, 255), 2)
-            # cv2.rectangle(frame_sm, (left, bottom - 35), (right, bottom), (0, 0, 255), cv2.FILLED)
-            # font = cv2.FONT_HERSHEY_DUPLEX
-            # cv2.putText(frame_sm, name, (left + 6, bottom - 6), font, 0.5, (255, 255, 255), 1)
-            # print(">name: " + name)
 
             del_names = []
             # print("frame 8", time.time() - self.startTime)
@@ -287,7 +275,6 @@ class Camera(threading.Thread):
                 del self.unknown_face_names[:]
                 del self.unknown_face_encodings[:]
                 # print("clear unknown", self.detected_faces_new, self.unknown_face_names, self.unknown_face_encodings)
-        # cv2.imshow(self.cameraName, frame_sm)
         # print("show cam 2")
         # print("frame 10", self.frameCounter, time.time() - self.startTime)
 
@@ -336,4 +323,4 @@ class Camera(threading.Thread):
                 print("Error: unable to send email")
 
 
-# Camera("testCamera", "rtsp://admin:12345qwer@192.168.1.202", "").start()
+# BellCamera("testCamera", "rtsp://admin:12345qwer@192.168.1.202", "").start()

@@ -336,4 +336,4 @@ class Camera(threading.Thread):
                 print("Error: unable to send email")
 
 
-Camera("testCamera", "rtsp://admin:12345qwer@192.168.1.202", "").start()
+# Camera("testCamera", "rtsp://admin:12345qwer@192.168.1.202", "").start()

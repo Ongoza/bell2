@@ -181,7 +181,7 @@ def start_cam(cam):
                 if(camURL != ''):
                     url += "/" + value["camURL"]
             log1.info("Try open camera url:" + url)
-            name = value["Location"] + "_" + value["Name"]
+            name = value["Location"] + "_" + cam
             cam_id = url
             if(value["Port"] == '0' or value["Port"] == ''):
                 try:

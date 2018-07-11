@@ -1,0 +1,1 @@
+This is the implementation the <a href="https://github.com/ageitgey/face_recognition/">face_recognition</a> module for a web cameras system (Python & ReactJS). This app allows configure connection to web cameras and control of events by web.

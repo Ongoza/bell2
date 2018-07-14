@@ -209,12 +209,17 @@ def start_cam(cam):
 def check_active_cams():
     # print("Tik cam")
     for key, item in threads.items():
-        # print("check=", key, threads[key])
-        if(item):
-            if(not item.isActive):
-                log1.info("try restart cam: ", item.url)
-                item.start()
-                # stop_cam(key, False)
+        # print("check=", key, "=item=", item, "=")
+        try:
+            if(item):
+                # print("check 2 =", key, "=item=", item, "=", item.isActive)
+                if(not item.isActive):
+                    log1.info("try restart cam: " + str(key))
+                    # print("check 3 =", key, "=item=", item, "=")
+                    item.start()
+                    # stop_cam(key, False)
+        except:
+            log1.error("Error check camera " + str(key))
 
 
 if __name__ == '__main__':

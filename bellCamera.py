@@ -105,6 +105,7 @@ class BellCamera(threading.Thread):
                     # self.stop()
         else:
             self.log1.error("Can not open connection to camera: " + self.cameraName)
+            self.stop()
 
     def loadFaces(self):
         location_faces = os.path.join(self.location, "faces/")
@@ -123,8 +124,8 @@ class BellCamera(threading.Thread):
                 self.log1.error("error open file: <img src=\"faces/" + str(fileName) + "\"/>")
         self.log1.info("Knowned faces loaded successefull. Faces: " + str(count) + ". Errors: " + str(count_err))
 
-    def doFrame(self, frame_sm):
-        frame_sm = cv2.resize(frame_sm, (0, 0), fx=0.5, fy=0.5)
+    def doFrame(self, frame_big):
+        frame_sm = cv2.resize(frame_big, (0, 0), fx=0.5, fy=0.5)
         # frame_sm = cv2.resize(frame_sm, (0, 0), fx=0.5, fy=0.5)
         # cv2.imshow(self.cameraName, frame_sm)
         # picName = 'log/img/testCam_' + str(int(round(time.time() * 100000))) + ".jpeg"
@@ -154,7 +155,7 @@ class BellCamera(threading.Thread):
                     # print("frame 3", time.time() - self.startTime)
                     if(not name in self.detected_faces):
                         self.log2.info("Detect face " + name)
-                        saveImgPath = "log/img/" + name + ".png"
+                        saveImgPath = "log/img/" + name
                         txt = "Detect person: " + name
                         # print("txt=", txt)
                         self.sendMsgAlert(txt, name)
@@ -175,7 +176,7 @@ class BellCamera(threading.Thread):
                             # save photo if present during several frames !!!!!!
                             self.detected_faces_new[name] = self.detected_faces_new[name] - 1
                             if(self.detected_faces_new[name] < 0):
-                                saveImgPath = "faces/" + name + ".png"
+                                saveImgPath = "faces/" + name
                                 del self.detected_faces_new[name]
                                 if(name in self.unknown_face_names):
                                     index = self.unknown_face_names.index(name)
@@ -227,8 +228,10 @@ class BellCamera(threading.Thread):
                     crop_img = frame_sm[top:bottom, left:right]
                     height_sm, width_sm, channels_sm = crop_img.shape
                     if(height_sm > 0 and width_sm > 0):
-                        cv2.imwrite(fullPath, crop_img)
-                        self.log2.info("Saved new image " + saveImgPath + " <img src=\"" + saveImgPath + "\"/>")
+                        cv2.imwrite(fullPath + ".png", crop_img)
+                        cv2.imwrite(fullPath + "_big.png", frame_big)
+                        self.log2.info("Saved new image " + saveImgPath + " <img src=\"" + saveImgPath + ".png" + "\"/>")
+                        self.log2.info("Saved new full image " + saveImgPath + "_big <img src=\"" + saveImgPath + "_big.png" + "\"/>")
                     else:
                         self.log1.error("Error create file with face " + saveImgPath)
 
